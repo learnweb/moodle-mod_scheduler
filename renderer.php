@@ -586,14 +586,14 @@ class mod_scheduler_renderer extends plugin_renderer_base
                     ? 't/expanded'
                     : 't/collapsed';
             $icon = $this->output->pix_icon(
-                    $toggleicon,
-                    $alttext,
-                    'moodle'
+                $toggleicon,
+                $alttext,
+                'moodle'
             );
             $o .= html_writer::tag(
-                    'button',
-                    $icon,
-                    [
+                'button',
+                $icon,
+                [
                             'id' => $toggleid,
                             'type' => 'button',
                             'class' => 'studentlist-togglebutton btn btn-link p-0',
