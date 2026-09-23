@@ -260,6 +260,10 @@ class scheduler_editslot_form extends scheduler_slotform_base
         );
         $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
 
+        // Group ID.
+        $mform->addElement('hidden', 'bookinggroupid', 0);
+        $mform->setType('bookinggroupid', PARAM_INT);
+
         // Appointments.
 
         $repeatarray = [];
@@ -544,6 +548,7 @@ class scheduler_editslot_form extends scheduler_slotform_base
                 } else {
                     $app = $slot->create_appointment();
                     $app->studentid = $data->studentid[$i];
+                    $app->bookinggroupid = $data->bookinggroupid ?? 0;
                     $app->timecreated = time();
                     $app->save();
                 }

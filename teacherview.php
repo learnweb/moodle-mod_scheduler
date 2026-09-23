@@ -322,6 +322,7 @@ if ($action == 'schedulegroup') {
             ['slotid' => $slotid, 'repeats' => $repeats]
         );
         $data = $mform->prepare_formdata($slot);
+        $data->bookinggroupid = $groupid;
         foreach ($members as $member) {
             $data->studentid[] = $member->id;
         }
@@ -333,7 +334,9 @@ if ($action == 'schedulegroup') {
     } else if (empty($subaction)) {
         $actionurl = new moodle_url($baseurl, ['what' => 'addslot']);
 
-        $data = [];
+        $data = [
+            'bookinggroupid' => $groupid,
+        ];
         $i = 0;
         foreach ($members as $member) {
             $data['studentid'][$i] = $member->id;
