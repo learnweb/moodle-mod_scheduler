@@ -825,9 +825,8 @@ class scheduler extends mvc_record_model
         $sql = "SELECT COUNT(*)
                   FROM {scheduler_slots} s
                   JOIN {scheduler_appointment} a ON a.slotid = s.id
-                  JOIN {groups_members} gm ON a.studentid = gm.userid
                  WHERE s.schedulerid = :schedulerid
-                       AND gm.groupid = :groupid
+                       AND a.bookinggroupid = :groupid
                        $attendcond";
         $params = ['schedulerid' => $this->id, 'groupid' => $groupid];
         return $DB->count_records_sql($sql, $params) > 0;
@@ -1256,28 +1255,18 @@ class scheduler extends mvc_record_model
      * @return int|array of moodle group records; or int 0 if there are no groups in the course.
      */
     public function get_groups_for_scheduling() {
-        global $DB;
         // Get all groups that can book slots.
         $groups = $this->get_available_groups();
 
-        // Remove groups that already contain a student with an appointment.
-        $sql = "SELECT DISTINCT a.studentid
-          FROM {scheduler_appointment} a
-          JOIN {scheduler_slots} s ON a.slotid = s.id
-         WHERE s.schedulerid = :sid";
-        $studentrecs = $DB->get_records_sql($sql, ['sid' => $this->id]);
-        if ($studentrecs) {
-            foreach ($studentrecs as $r) {
-                $studentid = $r->studentid;
-                $studentgroups = groups_get_all_groups($this->courseid, $studentid, $this->cm->groupingid);
-                if ($studentgroups) {
-                    foreach ($studentgroups as $g) {
-                        $gid = (string)$g->id;
-                        if (isset($groups[$gid])) {
-                            unset($groups[$gid]);
-                        }
-                    }
-                }
+        foreach ($groups as $groupid => $group) {
+            $groupalreadybooked = $this->has_slots_booked_for_group(
+                    $group->id,
+                    false,
+                    $this->schedulermode === 'onetime'
+            );
+
+            if ($groupalreadybooked) {
+                unset($groups[$groupid]);
             }
         }
         return $groups;
