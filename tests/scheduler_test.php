@@ -573,7 +573,7 @@ final class scheduler_test extends \advanced_testcase
      * @throws \coding_exception
      * @covers \mod_scheduler\model\scheduler::has_slots_booked_for_group
      * @covers \mod_scheduler\model\scheduler::get_groups_for_scheduling
- */
+     */
     public function test_has_slots_booked_for_group(): void {
         $student1 = $this->create_student();
         $student2 = $this->create_student();

@@ -1260,9 +1260,9 @@ class scheduler extends mvc_record_model
 
         foreach ($groups as $groupid => $group) {
             $groupalreadybooked = $this->has_slots_booked_for_group(
-                    $group->id,
-                    false,
-                    $this->schedulermode === 'onetime'
+                $group->id,
+                false,
+                $this->schedulermode === 'onetime'
             );
 
             if ($groupalreadybooked) {
