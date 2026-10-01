@@ -131,6 +131,9 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
 
         $data->studentid = $this->get_mappingid('user', $data->studentid);
 
+        $data->bookinggroupid = !empty($data->bookinggroupid)
+            ? $this->get_mappingid('group', $data->bookinggroupid, 0) : 0;
+
         $newitemid = $DB->insert_record('scheduler_appointment', $data);
         $this->set_mapping('scheduler_appointment', $oldid, $newitemid, true);
     }

@@ -72,7 +72,17 @@ function scheduler_book_slot($scheduler, $slotid, $userid, $groupid, $mform, $fo
 
     $errormessage = '';
 
-    $bookinglimit = $scheduler->count_bookable_appointments($userid, false);
+    if ($groupid > 0) {
+        $groupalreadybooked = $scheduler->has_slots_booked_for_group(
+            $groupid,
+            false,
+            $scheduler->schedulermode === 'onetime'
+        );
+        $bookinglimit = $groupalreadybooked ? 0 : 1;
+    } else {
+        $bookinglimit = $scheduler->count_bookable_appointments($userid, false);
+    }
+
     if ($bookinglimit == 0) {
         $errormessage = get_string('selectedtoomany', 'scheduler', $bookinglimit);
     } else {
@@ -104,6 +114,7 @@ function scheduler_book_slot($scheduler, $slotid, $userid, $groupid, $mform, $fo
     foreach ($userstobook as $studentid) {
         $appointment = $slot->create_appointment();
         $appointment->studentid = $studentid;
+        $appointment->bookinggroupid = max($groupid, 0);
         $appointment->attended = 0;
         $appointment->timecreated = time();
         $appointment->timemodified = time();
@@ -112,6 +123,11 @@ function scheduler_book_slot($scheduler, $slotid, $userid, $groupid, $mform, $fo
         if (($studentid == $userid) && $mform) {
             $mform->save_booking_data($formdata, $appointment);
         }
+
+        // A newly created booking cannot already have been attended.
+        $appointment->attended = 0;
+        $appointment->timemodified = time();
+        $appointment->save();
 
         \mod_scheduler\event\booking_added::create_from_slot($slot)->trigger();
 
@@ -289,33 +305,41 @@ if ($action == 'cancelbooking') {
         throw new moodle_exception('nopermissions');
     }
 
-    $userstocancel = [$USER->id];
-    if ($appointgroup) {
-        $userstocancel = array_keys($scheduler->get_available_students($appointgroup));
+    $appointmentstocancel = [];
+
+    if ($appointgroup > 0) {
+        foreach ($slot->get_appointments() as $appointment) {
+            if ((int) $appointment->bookinggroupid === $appointgroup) {
+                $appointmentstocancel[] = $appointment;
+            }
+        }
+    } else {
+        $appointment = $slot->get_student_appointment($USER->id);
+        if ($appointment && (int) $appointment->bookinggroupid === 0) {
+            $appointmentstocancel[] = $appointment;
+        }
     }
 
-    foreach ($userstocancel as $userid) {
-        if ($appointment = $slot->get_student_appointment($userid)) {
-            $scheduler->delete_appointment($appointment->id);
+    foreach ($appointmentstocancel as $appointment) {
+        $scheduler->delete_appointment($appointment->id);
 
-            // Notify the teacher.
-            if ($scheduler->allownotifications) {
-                $student = $DB->get_record('user', ['id' => $USER->id]);
-                $teacher = $DB->get_record('user', ['id' => $slot->teacherid]);
-                scheduler_messenger::send_slot_notification(
-                    $slot,
-                    'bookingnotification',
-                    'cancelled',
-                    $student,
-                    $teacher,
-                    $teacher,
-                    $student,
-                    $COURSE
-                );
-            }
-
-            \mod_scheduler\event\booking_removed::create_from_slot($slot)->trigger();
+        // Notify the teacher.
+        if ($scheduler->allownotifications) {
+            $student = $DB->get_record('user', ['id' => $USER->id]);
+            $teacher = $DB->get_record('user', ['id' => $slot->teacherid]);
+            scheduler_messenger::send_slot_notification(
+                $slot,
+                'bookingnotification',
+                'cancelled',
+                $student,
+                $teacher,
+                $teacher,
+                $student,
+                $COURSE
+            );
         }
+
+        \mod_scheduler\event\booking_removed::create_from_slot($slot)->trigger();
     }
 
     redirect($returnurl);

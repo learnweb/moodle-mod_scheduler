@@ -59,7 +59,7 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         $appointments = new backup_nested_element('appointments');
 
         $appointment = new backup_nested_element('appointment', ['id'], [
-            'studentid', 'attended', 'grade',
+            'studentid', 'bookinggroupid', 'attended', 'grade',
             'appointmentnote', 'appointmentnoteformat', 'teachernote', 'teachernoteformat',
             'studentnote', 'studentnoteformat', 'timecreated', 'timemodified', ]);
 
@@ -87,6 +87,7 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         if ($userinfo) {
             $slot->annotate_ids('user', 'teacherid');
             $appointment->annotate_ids('user', 'studentid');
+            $appointment->annotate_ids('group', 'bookinggroupid');
         }
 
         // Define file annotations.

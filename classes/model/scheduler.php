@@ -825,9 +825,8 @@ class scheduler extends mvc_record_model
         $sql = "SELECT COUNT(*)
                   FROM {scheduler_slots} s
                   JOIN {scheduler_appointment} a ON a.slotid = s.id
-                  JOIN {groups_members} gm ON a.studentid = gm.userid
                  WHERE s.schedulerid = :schedulerid
-                       AND gm.groupid = :groupid
+                       AND a.bookinggroupid = :groupid
                        $attendcond";
         $params = ['schedulerid' => $this->id, 'groupid' => $groupid];
         return $DB->count_records_sql($sql, $params) > 0;
@@ -1205,6 +1204,15 @@ class scheduler extends mvc_record_model
     }
 
     /**
+     * Get list of available groups (i.e., groups that can book slots)
+     *
+     * @return \stdClass[] array of moodle group records
+     */
+    public function get_available_groups() {
+        return groups_get_all_groups($this->courseid, 0, $this->bookingrouping);
+    }
+
+    /**
      * Get a list of students that can still make an appointment.
      *
      * @param mixed $groups single group or array of groups - only return
@@ -1241,6 +1249,28 @@ class scheduler extends mvc_record_model
         return $schedstuds;
     }
 
+    /**
+     * Get a list of student groups that can still make an appointment.
+     *
+     * @return int|array of moodle group records; or int 0 if there are no groups in the course.
+     */
+    public function get_groups_for_scheduling() {
+        // Get all groups that can book slots.
+        $groups = $this->get_available_groups();
+
+        foreach ($groups as $groupid => $group) {
+            $groupalreadybooked = $this->has_slots_booked_for_group(
+                $group->id,
+                false,
+                $this->schedulermode === 'onetime'
+            );
+
+            if ($groupalreadybooked) {
+                unset($groups[$groupid]);
+            }
+        }
+        return $groups;
+    }
 
     /**
      * Delete an appointment, and do whatever is needed

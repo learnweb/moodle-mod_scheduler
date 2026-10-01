@@ -322,6 +322,7 @@ if ($action == 'schedulegroup') {
             ['slotid' => $slotid, 'repeats' => $repeats]
         );
         $data = $mform->prepare_formdata($slot);
+        $data->bookinggroupid = $groupid;
         foreach ($members as $member) {
             $data->studentid[] = $member->id;
         }
@@ -333,7 +334,9 @@ if ($action == 'schedulegroup') {
     } else if (empty($subaction)) {
         $actionurl = new moodle_url($baseurl, ['what' => 'addslot']);
 
-        $data = [];
+        $data = [
+            'bookinggroupid' => $groupid,
+        ];
         $i = 0;
         foreach ($members as $member) {
             $data['studentid'][$i] = $member->id;
@@ -621,7 +624,7 @@ if ($students === 0) {
         $maildisplay .= ' &mdash; ';
         $maildisplay .= html_writer::link($reminderurl, get_string('sendreminder', 'scheduler'));
 
-        echo $output->box_start('maildisplay');
+        echo $output->box_start('maildisplay my-3');
         // Print number of students who still have to make an appointment.
         echo $output->heading(get_string('missingstudents', 'scheduler', count($reminderstudents)), 3);
         // Print e-mail addresses and mailto links.
