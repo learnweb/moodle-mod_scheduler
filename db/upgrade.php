@@ -443,5 +443,21 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
 
         upgrade_mod_savepoint(true, 2026092200, 'scheduler');
     }
+
+    if ($oldversion < 2026100100) {
+        $table = new xmldb_table('scheduler');
+        $field = new xmldb_field('groupcreation', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'gradingstrategy');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('scheduler_slots');
+        $field = new xmldb_field('coursegroupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'hideuntil');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026100100, 'scheduler');
+    }
     return true;
 }

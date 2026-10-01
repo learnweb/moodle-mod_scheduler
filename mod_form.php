@@ -92,6 +92,7 @@ class mod_scheduler_mod_form extends moodleform_mod
         $mform->addGroup($modegroup, 'modegrp', get_string('mode', 'scheduler'), ' ', false);
         $mform->addHelpButton('modegrp', 'appointmentmode', 'scheduler');
 
+        // Booking in groups.
         if (get_config('mod_scheduler', 'groupscheduling')) {
             $selopt = [
                             -1 => get_string('no'),
@@ -106,6 +107,11 @@ class mod_scheduler_mod_form extends moodleform_mod
             $mform->addHelpButton('bookingrouping', 'groupbookings', 'scheduler');
             $mform->setDefault('bookingrouping', '-1');
         }
+
+        // Automatic course group creation.
+        $mform->addElement('select', 'groupcreation', get_string('groupcreation', 'scheduler'), $this->get_group_creation_options());
+        $mform->addHelpButton('groupcreation', 'groupcreation', 'scheduler');
+        $mform->setDefault('groupcreation', '0');
 
         $mform->addElement('duration', 'guardtime', get_string('guardtime', 'scheduler'), ['optional' => true]);
         $mform->addHelpButton('guardtime', 'guardtime', 'scheduler');
@@ -260,5 +266,19 @@ class mod_scheduler_mod_form extends moodleform_mod
             $data->bookinginstructionsformat = $editor['format'];
             $DB->update_record('scheduler', $data);
         }
+    }
+
+    /**
+     * Retrieves the available scheduler group modes for the automatic group creation from a slot.
+     *
+     * @return array
+     * @throws coding_exception
+     */
+    private function get_group_creation_options() {
+        $group_creation_options = [];
+        $group_creation_options[0] = get_string('nogroupcreation', 'scheduler');
+        $group_creation_options[1] = get_string('groupcreationforslot', 'scheduler');
+        $group_creation_options[2] = get_string('groupcreationforbooking', 'scheduler');
+        return $group_creation_options;
     }
 }

@@ -301,6 +301,12 @@ $string['groupbreakdown'] = 'By group size';
 $string['groupbookings'] = 'Booking in groups';
 $string['groupbookings_help'] = 'Allow students to book a slot for all members of their group.
 (Note that this is separate from the "group mode" setting, which controls the slots a student can see.)';
+$string['groupcreation_help'] = 'Course groups will be automatically created and updated. <ul><li>\'Group creation per empty slot\': A course group is created for every new slot.</li>
+<li>\'Group creation per booked slot\': A course group is created for every booked slot.</li></ul>';
+$string['groupcreation'] = 'Create course groups automatically';
+$string['nogroupcreation'] = 'Never';
+$string['groupcreationforslot'] = 'When slot is created';
+$string['groupcreationforbooking'] = 'When a slot is first booked individually';
 $string['groupmodeyourgroups'] = 'Group mode: {$a->groupmode}. Only students in {$a->grouplist} can book appointments with you.';
 $string['groupmodeyourgroupsempty'] = 'Group mode: {$a->groupmode}. You are not member of any group, therefore students cannot book appointments with you.';
 $string['groupscheduling'] = 'Enable group scheduling';
