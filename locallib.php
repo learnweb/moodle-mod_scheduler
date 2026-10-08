@@ -412,11 +412,11 @@ function scheduler_create_coursegroup($slot) {
  * ensuring uniqueness by appending an incremented identifier if other groups share
  * a similar name pattern.
  *
- * @param string $name The name of the scheduler.
- * @param int $time The start time (timestamp) of the slot.
- * @param int $courseid The ID of the course.
- * @return string A unique name for the course group.
- * @throws dml_exception If a database error occurs during the query.
+ * @param $name
+ * @param $time
+ * @param $slotid
+ * @return string
+ * @throws coding_exception
  */
 function scheduler_create_coursegroupname($name, $time, $slotid) {
     $timezone = core_date::get_server_timezone();
