@@ -797,5 +797,3 @@ function mod_scheduler_get_fontawesome_icon_map() {
         'mod_scheduler:t/no' => 'fa-thumbs-down',
     ];
 }
-
-

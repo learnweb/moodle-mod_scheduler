@@ -109,7 +109,12 @@ class mod_scheduler_mod_form extends moodleform_mod
         }
 
         // Automatic course group creation.
-        $mform->addElement('select', 'groupcreation', get_string('groupcreation', 'scheduler'), $this->get_group_creation_options());
+        $mform->addElement(
+            'select',
+            'groupcreation',
+            get_string('groupcreation', 'scheduler'),
+            $this->get_group_creation_options()
+        );
         $mform->addHelpButton('groupcreation', 'groupcreation', 'scheduler');
         $mform->setDefault('groupcreation', '0');
 
@@ -275,10 +280,10 @@ class mod_scheduler_mod_form extends moodleform_mod
      * @throws coding_exception
      */
     private function get_group_creation_options() {
-        $group_creation_options = [];
-        $group_creation_options[0] = get_string('nogroupcreation', 'scheduler');
-        $group_creation_options[1] = get_string('groupcreationforslot', 'scheduler');
-        $group_creation_options[2] = get_string('groupcreationforbooking', 'scheduler');
-        return $group_creation_options;
+        $groupcreationoptions = [];
+        $groupcreationoptions[0] = get_string('nogroupcreation', 'scheduler');
+        $groupcreationoptions[1] = get_string('groupcreationforslot', 'scheduler');
+        $groupcreationoptions[2] = get_string('groupcreationforbooking', 'scheduler');
+        return $groupcreationoptions;
     }
 }

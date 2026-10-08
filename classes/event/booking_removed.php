@@ -43,8 +43,8 @@ class booking_removed extends slot_base
      * @return \core\event\base
      */
     public static function create_from_slot(
-            \mod_scheduler\model\slot $slot,
-            ?\stdClass $appointment = null
+        \mod_scheduler\model\slot $slot,
+        ?\stdClass $appointment = null
     ) {
         $data = self::base_data($slot);
 

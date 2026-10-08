@@ -36,5 +36,5 @@ $observers = [
     [
             'eventname' => '\mod_scheduler\event\booking_removed',
             'callback' => '\mod_scheduler\observer::booking_removed',
-    ]
+    ],
 ];

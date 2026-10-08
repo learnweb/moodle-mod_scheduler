@@ -376,7 +376,7 @@ function scheduler_create_coursegroup($slot) {
         $scheduler = $DB->get_record('scheduler', ['id' => $slot->schedulerid], 'name,course', MUST_EXIST);
         // Check whether the group already exists.
         $groupid = $DB->get_field('scheduler_slots', 'coursegroupid', ['id' => $slot->id], MUST_EXIST);
-        if ($groupid && $DB->record_exists('groups', ['id' => $groupid, 'courseid' => $scheduler->course,])) {
+        if ($groupid && $DB->record_exists('groups', ['id' => $groupid, 'courseid' => $scheduler->course])) {
             $slot->coursegroupid = $groupid;
             return $groupid;
         }
@@ -426,8 +426,4 @@ function scheduler_create_coursegroupname($name, $time, $slotid) {
     $namelength = max(0, $maxlength - core_text::strlen($suffix));
     $shortname = core_text::substr($name, 0, $namelength);
     return $shortname . $suffix;
-}
-
-function create_group_when_slot_is_created($slot) {
-
 }

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *
+ * Helpers for synchronizing generated course groups with slot bookings.
  *
  * @package    mod_scheduler
  * @copyright  2026 L. Herfeldt
@@ -23,10 +23,18 @@
  */
 
 namespace mod_scheduler;
-
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Updates generated course group memberships from individual slot bookings.
+ */
 class course_group_helper {
+    /**
+     * Adds individually booked students to the slot's generated course group.
+     *
+     * @param model\slot $slot
+     * @return void
+     * @throws \coding_exception
+     * @throws \dml_exception
+     */
     public static function add_booked_students(\mod_scheduler\model\slot $slot): void {
         global $CFG;
         global $DB;
@@ -45,10 +53,10 @@ class course_group_helper {
         }
 
         $studentids = $DB->get_fieldset_select(
-                'scheduler_appointment',
-                'DISTINCT studentid',
-                'slotid = :slotid AND bookinggroupid = 0',
-                ['slotid' => $slot->id]
+            'scheduler_appointment',
+            'DISTINCT studentid',
+            'slotid = :slotid AND bookinggroupid = 0',
+            ['slotid' => $slot->id]
         );
 
         if (!$studentids) {
@@ -64,6 +72,14 @@ class course_group_helper {
         }
     }
 
+    /**
+     * Removes individually booked students from the slot's generated course group.
+     *
+     * @param model\slot $slot
+     * @param \stdClass $appointment
+     * @return void
+     * @throws \dml_exception
+     */
     public static function remove_booked_students(\mod_scheduler\model\slot $slot, \stdClass $appointment): void {
         global $CFG, $DB;
 
@@ -81,9 +97,9 @@ class course_group_helper {
         }
 
         $groupid = $DB->get_field(
-                'scheduler_slots',
-                'coursegroupid',
-                ['id' => $slot->id]
+            'scheduler_slots',
+            'coursegroupid',
+            ['id' => $slot->id]
         );
 
         if (!$groupid || !$DB->record_exists('groups', ['id' => $groupid, 'courseid' => $scheduler->course])) {
@@ -95,4 +111,3 @@ class course_group_helper {
         \groups_remove_member($groupid, (int) $appointment->studentid);
     }
 }
-
