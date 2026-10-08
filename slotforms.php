@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_scheduler\course_group_helper;
 use mod_scheduler\model\scheduler;
 use mod_scheduler\model\slot;
 
@@ -535,10 +536,12 @@ class scheduler_editslot_form extends scheduler_slotform_base
         $slot->notesformat = $editor['format'];
 
         $currentapps = $slot->get_appointments();
+        $removedappointments = [];
         for ($i = 0; $i < $data->appointment_repeats; $i++) {
             if ($data->deletestudent[$i] != 0) {
                 if ($data->appointid[$i]) {
                     $app = $slot->get_appointment($data->appointid[$i]);
+                    $removedappointments[] = $app->get_data();
                     $slot->remove_appointment($app);
                 }
             } else if ($data->studentid[$i] > 0) {
@@ -591,6 +594,14 @@ class scheduler_editslot_form extends scheduler_slotform_base
         }
 
         $slot->save();
+
+        // Remove students for canceled appointments.
+        foreach ($removedappointments as $appointment) {
+            course_group_helper::remove_booked_students($slot, $appointment);
+        }
+
+        // Ensure all currently booked students belong to the course group.
+        course_group_helper::add_booked_students($slot);
 
         $slot = $this->scheduler->get_slot($slot->id);
 

@@ -39,10 +39,22 @@ class booking_removed extends slot_base
      * Create this event on a given slot.
      *
      * @param \mod_scheduler\model\slot $slot
+     * @param \stdClass|null $appointment Cancelled appointment data.
      * @return \core\event\base
      */
-    public static function create_from_slot(\mod_scheduler\model\slot $slot) {
-        $event = self::create(self::base_data($slot));
+    public static function create_from_slot(
+            \mod_scheduler\model\slot $slot,
+            ?\stdClass $appointment = null
+    ) {
+        $data = self::base_data($slot);
+
+        if ($appointment !== null) {
+            $data['other'] = [
+                'studentid' => (int) $appointment->studentid,
+                'bookinggroupid' => (int) $appointment->bookinggroupid,
+            ];
+        }
+        $event = self::create($data);
         $event->set_slot($slot);
         return $event;
     }

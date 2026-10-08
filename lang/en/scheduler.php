@@ -208,6 +208,7 @@ $string['conflictingslots'] = 'The slot on {$a} cannot be created due to conflic
 $string['copytomyself'] = 'Send a copy to myself';
 $string['count_of_total_groups'] = '<strong>{$a->count}</strong> of {$a->total} groups';
 $string['course'] = 'Course';
+$string['coursegrouplocktimeout'] = 'The course group is currently being updated. Please try again.';
 $string['createexport'] = 'Create export file';
 $string['csvformat'] = 'CSV';
 $string['csvfieldseparator'] = 'Field separator for CSV';
