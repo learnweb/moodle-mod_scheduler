@@ -376,6 +376,10 @@ final class slot_test extends \advanced_testcase
      * @throws \dml_exception
      * @covers \mod_scheduler\course_group_helper::add_booked_students
      * @covers \mod_scheduler\course_group_helper::remove_booked_students
+     * @covers \mod_scheduler\event\booking_added::create_from_slot
+     * @covers \mod_scheduler\event\booking_removed::create_from_slot
+     * @covers \mod_scheduler\observer::booking_added
+     * @covers \mod_scheduler\observer::booking_removed
      * @covers \mod_scheduler\model\slot::delete
      */
     public function test_cancellation_and_slot_deletion_group_memberships(): void {
@@ -395,8 +399,8 @@ final class slot_test extends \advanced_testcase
         $slot->exclusivity = 3;
         $slot->save();
 
-        course_group_helper::add_booked_students($slot);
-        $groupid = $slot->coursegroupid;
+        \mod_scheduler\event\booking_added::create_from_slot($slot)->trigger();
+        $groupid = $DB->get_field('scheduler_slots', 'coursegroupid', ['id' => $this->slotid], MUST_EXIST);
 
         foreach ($this->students as $studentid) {
             $this->assertTrue(\groups_is_member($groupid, $studentid));
@@ -409,7 +413,7 @@ final class slot_test extends \advanced_testcase
         $slot->remove_appointment($appointment);
         $slot->save();
 
-        course_group_helper::remove_booked_students($slot, $appointmentdata);
+        \mod_scheduler\event\booking_removed::create_from_slot($slot, $appointmentdata)->trigger();
 
         $this->assertFalse(\groups_is_member($groupid, $this->students[0]));
         $this->assertTrue(\groups_is_member($groupid, $this->students[1]));
@@ -422,6 +426,70 @@ final class slot_test extends \advanced_testcase
         $this->assertTrue($DB->record_exists('groups', ['id' => $groupid]));
         $this->assertTrue(\groups_is_member($groupid, $this->students[1]));
         $this->assertTrue(\groups_is_member($groupid, $this->students[2]));
+    }
+
+    /**
+     * Tests creating a course group when a group slot is added.
+     *
+     * @return void
+     * @throws \coding_exception
+     * @throws \dml_exception
+     * @covers ::scheduler_create_coursegroup
+     * @covers \mod_scheduler\event\slot_added::create_from_slot
+     * @covers \mod_scheduler\observer::slot_added
+     */
+    public function test_slot_added_event_creates_coursegroup(): void {
+        global $DB;
+
+        $this->setAdminUser();
+        $scheduler = scheduler::load_by_id($this->schedulerid);
+        $scheduler->groupcreation = 1;
+        $scheduler->save();
+
+        $slot = slot::load_by_id($this->slotid, $scheduler);
+        $slot->exclusivity = 3;
+        $slot->save();
+
+        \mod_scheduler\event\slot_added::create_from_slot($slot)->trigger();
+
+        $groupid = $DB->get_field('scheduler_slots', 'coursegroupid', ['id' => $this->slotid], MUST_EXIST);
+
+        $this->assertNotEmpty($groupid);
+        $this->assertTrue($DB->record_exists('groups', ['id' => $groupid, 'courseid' => $this->courseid]));
+    }
+
+    /**
+     * Tests that an existing group booking does not create another course group.
+     *
+     * @return void
+     * @throws \coding_exception
+     * @throws \dml_exception
+     * @covers \mod_scheduler\course_group_helper::add_booked_students
+     * @covers \mod_scheduler\event\booking_added::create_from_slot
+     * @covers \mod_scheduler\observer::booking_added
+     */
+    public function test_group_bookings_does_not_create_coursegroup(): void {
+        global $DB;
+
+        $this->setAdminUser();
+        $scheduler = scheduler::load_by_id($this->schedulerid);
+        $scheduler->groupcreation = 2;
+        $scheduler->save();
+
+        $slot = slot::load_by_id($this->slotid, $scheduler);
+        $slot->exclusivity = 3;
+        $slot->save();
+
+        $bookedgroup = $this->getDataGenerator()->create_group(['courseid' => $this->courseid]);
+
+        $DB->set_field('scheduler_appointment', 'bookinggroupid', $bookedgroup->id, ['id' => $this->slotid]);
+
+        \mod_scheduler\event\slot_added::create_from_slot($slot)->trigger();
+
+        $coursegroupid = $DB->get_field('scheduler_slots', 'coursegroupid', ['id' => $this->slotid], MUST_EXIST);
+
+        $this->assertEquals(0, $coursegroupid);
+        $this->assertEquals(1, $DB->count_records('groups', ['courseid' => $this->courseid]));
     }
 
     /**

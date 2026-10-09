@@ -108,9 +108,6 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $data->timemodified = $this->apply_date_offset($data->timemodified);
         $data->emaildate = $this->apply_date_offset($data->emaildate);
         $data->hideuntil = $this->apply_date_offset($data->hideuntil);
-
-        $data->teacherid = $this->get_mappingid('user', $data->teacherid);
-
         $data->teacherid = $this->get_mappingid('user', $data->teacherid);
 
         $data->coursegroupid = !empty($data->coursegroupid)
