@@ -57,8 +57,17 @@ function scheduler_action_doaddsession($scheduler, $formdata, moodle_url $return
         $slot->duration = max(1, $data->endhour * 60 + $data->endminute - $data->starthour * 60 - $data->startminute);
     }
 
+    $editor = $data->notes_editor;
+    $context = $scheduler->get_context();
+    $noteoptions = [
+        'trusttext' => true,
+        'maxfiles' => -1,
+        'maxbytes' => 0,
+        'context' => $context,
+        'subdirs' => false,
+    ];
     $slot->notes = '';
-    $slot->notesformat = FORMAT_HTML;
+    $slot->notesformat = $editor['format'];
     $slot->timemodified = time();
 
     for ($d = 0; $d <= $fordays; $d++) {
@@ -149,6 +158,16 @@ function scheduler_action_doaddsession($scheduler, $formdata, moodle_url $return
 
                 if (!$conflicts || $resolvable) {
                     $slotid = $DB->insert_record('scheduler_slots', $slot, true, true);
+                    $notes = file_save_draft_area_files(
+                            $editor['itemid'],
+                            $context->id,
+                            'mod_scheduler',
+                            'slotnote',
+                            $slotid,
+                            $noteoptions,
+                            $editor['text']
+                    );
+                    $DB->set_field('scheduler_slots', 'notes', $notes, ['id' => $slotid]);
                     $slotobj = $scheduler->get_slot($slotid);
                     \mod_scheduler\event\slot_added::create_from_slot($slotobj)->trigger();
                     $countslots++;

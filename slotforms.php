@@ -731,6 +731,16 @@ class scheduler_addsession_form extends scheduler_slotform_base {
         $mform->addElement('select', 'emaildaterel', get_string('emailreminder', 'scheduler'), $remindersel);
         $mform->setDefault('remindersel', -1);
 
+        // Slot comments.
+        $mform->addElement(
+                'editor',
+                'notes_editor',
+                get_string('comments', 'scheduler'),
+                ['rows' => 3, 'columns' => 60],
+                $this->noteoptions
+        );
+        $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
+
         $this->add_action_buttons();
     }
 
