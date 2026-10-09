@@ -15,22 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for mod/scheduler
+ * Event listeners for mod_scheduler.
  *
  * @package    mod_scheduler
- * @copyright  2018 Henning Bostelmann and others (see README.txt)
+ * @copyright  2017 Henning Bostelmann and others (see README.txt)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-/*
- * This is the development branch (master) of the scheduler module.
- */
-
-$plugin->component = 'mod_scheduler'; // Full name of the plugin (used for diagnostics).
-$plugin->version   = 2026100100;      // The current module version (Date: YYYYMMDDXX).
-$plugin->release   = 'v5.2-r1';
-$plugin->requires  = 2024100712;      // Requires Moodle 4.5.
-$plugin->supported = [500, 502];
-$plugin->maturity  = MATURITY_STABLE;
+$observers = [
+    [
+            'eventname' => '\mod_scheduler\event\slot_added',
+            'callback' => '\mod_scheduler\observer::slot_added',
+    ],
+    [
+            'eventname' => '\mod_scheduler\event\booking_added',
+            'callback' => '\mod_scheduler\observer::booking_added',
+    ],
+    [
+            'eventname' => '\mod_scheduler\event\booking_removed',
+            'callback' => '\mod_scheduler\observer::booking_removed',
+    ],
+];

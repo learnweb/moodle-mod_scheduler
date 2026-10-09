@@ -84,6 +84,8 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
             $data->bookingrouping = $this->get_mappingid('grouping', $data->bookingrouping);
         }
 
+        $data->groupcreation = (int) ($data->groupcreation ?? 0);
+
         // Insert the scheduler record.
         $newitemid = $DB->insert_record('scheduler', $data);
         // Immediately after inserting "activity" record, call this.
@@ -106,8 +108,11 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $data->timemodified = $this->apply_date_offset($data->timemodified);
         $data->emaildate = $this->apply_date_offset($data->emaildate);
         $data->hideuntil = $this->apply_date_offset($data->hideuntil);
-
         $data->teacherid = $this->get_mappingid('user', $data->teacherid);
+
+        $data->coursegroupid = !empty($data->coursegroupid)
+                ? $this->get_mappingid('group', $data->coursegroupid, 0)
+                : 0;
 
         $newitemid = $DB->insert_record('scheduler_slots', $data);
         $this->set_mapping('scheduler_slot', $oldid, $newitemid, true);
@@ -130,6 +135,9 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
         $data->studentid = $this->get_mappingid('user', $data->studentid);
+
+        $data->bookinggroupid = !empty($data->bookinggroupid)
+            ? $this->get_mappingid('group', $data->bookinggroupid, 0) : 0;
 
         $newitemid = $DB->insert_record('scheduler_appointment', $data);
         $this->set_mapping('scheduler_appointment', $oldid, $newitemid, true);
