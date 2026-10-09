@@ -333,6 +333,14 @@ final class slot_test extends \advanced_testcase
         $this->assert_event_exists($this->teacherid, $slot->starttime, "Meeting with your Students");
     }
 
+    /**
+     * Test creating and reusing a course group for a slot.
+     *
+     * @return void
+     * @throws \dml_exception
+     * @throws \moodle_exception
+     * @covers ::scheduler_create_coursegroup
+     */
     public function test_creates_coursegroup(): void {
         global $DB;
         $this->setAdminUser();
@@ -366,6 +374,9 @@ final class slot_test extends \advanced_testcase
      *
      * @return void
      * @throws \dml_exception
+     * @covers \mod_scheduler\course_group_helper::add_booked_students
+     * @covers \mod_scheduler\course_group_helper::remove_booked_students
+     * @covers \mod_scheduler\model\slot::delete
      */
     public function test_cancellation_and_slot_deletion_group_memberships(): void {
         global $DB;
