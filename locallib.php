@@ -412,10 +412,10 @@ function scheduler_create_coursegroup($slot) {
  * ensuring uniqueness by appending an incremented identifier if other groups share
  * a similar name pattern.
  *
- * @param $name
- * @param $time
- * @param $slotid
- * @return string
+ * @param string $name Scheduler name.
+ * @param int $time The slot start time.
+ * @param int $slotid The slot ID.
+ * @return string The generated course group name.
  * @throws coding_exception
  */
 function scheduler_create_coursegroupname($name, $time, $slotid) {
