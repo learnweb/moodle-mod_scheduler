@@ -565,4 +565,103 @@ final class scheduler_test extends \advanced_testcase
         $sid = $this->create_data_for_bookable_appointments('onetime', 1, 5 * DAYSECS, $studid, [2], []);
         $this->assert_bookable_appointments(0, 0, $sid, $studid);
     }
+
+    /**
+     * Tests group booking detection for overlapping groups.
+     *
+     * @return void
+     * @throws \coding_exception
+     * @covers \mod_scheduler\model\scheduler::has_slots_booked_for_group
+     * @covers \mod_scheduler\model\scheduler::get_groups_for_scheduling
+     */
+    public function test_has_slots_booked_for_group(): void {
+        $student1 = $this->create_student();
+        $student2 = $this->create_student();
+
+        $groupa = $this->getDataGenerator()->create_group([
+            'courseid' => $this->courseid,
+            'name' => 'Group A',
+        ]);
+        $groupb = $this->getDataGenerator()->create_group([
+            'courseid' => $this->courseid,
+            'name' => 'Group B',
+        ]);
+
+        // Student 1 belongs to both groups.
+        $this->getDataGenerator()->create_group_member([
+            'groupid' => $groupa->id,
+            'userid' => $student1,
+        ]);
+        $this->getDataGenerator()->create_group_member([
+            'groupid' => $groupb->id,
+            'userid' => $student1,
+        ]);
+
+        // Student 2 only to one.
+        $this->getDataGenerator()->create_group_member([
+            'groupid' => $groupa->id,
+            'userid' => $student2,
+        ]);
+
+        $scheduler = scheduler::load_by_id($this->schedulerid);
+        $scheduler->bookingrouping = 0;
+        $scheduler->save();
+        $teacherid = $this->getDataGenerator()->create_user()->id;
+
+        // Individual booking does not count as a booking for groups.
+        $individualslot = $scheduler->create_slot();
+        $individualslot->teacherid = $teacherid;
+        $individualslot->starttime = time() + DAYSECS;
+        $individualslot->duration = 10;
+
+        $individualappointment = $individualslot->create_appointment();
+        $individualappointment->studentid = $student1;
+        $individualslot->save();
+
+        $this->assertFalse($scheduler->has_slots_booked_for_group($groupa->id));
+        $this->assertFalse($scheduler->has_slots_booked_for_group($groupb->id));
+
+        $groupsforscheduling = $scheduler->get_groups_for_scheduling();
+        $this->assertArrayHasKey($groupa->id, $groupsforscheduling);
+        $this->assertArrayHasKey($groupb->id, $groupsforscheduling);
+
+        // Book Group A.
+        $groupslot = $scheduler->create_slot();
+        $groupslot->teacherid = $teacherid;
+        $groupslot->starttime = time() + 2 * DAYSECS;
+        $groupslot->duration = 10;
+
+        foreach ([$student1, $student2 ] as $studentid) {
+            $appointment = $groupslot->create_appointment();
+            $appointment->studentid = $studentid;
+            $appointment->bookinggroupid = $groupa->id;
+        }
+
+        $groupslot->save();
+
+        $groupsforscheduling = $scheduler->get_groups_for_scheduling();
+        $this->assertArrayNotHasKey($groupa->id, $groupsforscheduling);
+        $this->assertArrayHasKey($groupb->id, $groupsforscheduling);
+
+        $this->assertTrue($scheduler->has_slots_booked_for_group($groupa->id));
+        $this->assertFalse($scheduler->has_slots_booked_for_group($groupb->id));
+
+        // Book group B separately.
+        $secondgroupslot = $scheduler->create_slot();
+        $secondgroupslot->teacherid = $teacherid;
+        $secondgroupslot->starttime = time() + 3 * DAYSECS;
+        $secondgroupslot->duration = 10;
+
+        $appointment = $secondgroupslot->create_appointment();
+        $appointment->studentid = $student1;
+        $appointment->bookinggroupid = $groupb->id;
+        $secondgroupslot->save();
+
+        $groupsforscheduling = $scheduler->get_groups_for_scheduling();
+        $this->assertArrayNotHasKey($groupa->id, $groupsforscheduling);
+        $this->assertArrayNotHasKey($groupb->id, $groupsforscheduling);
+
+        $this->assertTrue($scheduler->has_slots_booked_for_group($groupa->id));
+        $this->assertTrue($scheduler->has_slots_booked_for_group($groupb->id));
+    }
 }

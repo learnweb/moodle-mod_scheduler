@@ -347,3 +347,83 @@ class scheduler_file_info extends file_info
         return $this->browser->get_file_info($this->context);
     }
 }
+
+/**
+ * Creates a course group for the specified slot and scheduler.
+ *
+ * This function generates a new course group for the provided slot and scheduler
+ * if it does not already exist. The group is named based on the scheduler's name,
+ * slot's start time, and course ID.
+ *
+ * @param object $slot The slot object containing the relevant information (e.g., scheduler ID, start time, etc.).
+ * @return int The ID of the newly created course group.
+ *
+ * @throws dml_exception If a database query error occurs.
+ */
+function scheduler_create_coursegroup($slot) {
+    global $DB, $CFG;
+
+    require_once($CFG->dirroot . '/group/lib.php');
+
+    $factory = \core\lock\lock_config::get_lock_factory('mod_scheduler');
+    $lock = $factory->get_lock('mod_scheduler_coursegroup_' . $slot->id, 10);
+
+    if (!$lock) {
+        throw new moodle_exception('coursegrouplocktimeout', 'scheduler');
+    }
+
+    try {
+        $scheduler = $DB->get_record('scheduler', ['id' => $slot->schedulerid], 'name,course', MUST_EXIST);
+        // Check whether the group already exists.
+        $groupid = $DB->get_field('scheduler_slots', 'coursegroupid', ['id' => $slot->id], MUST_EXIST);
+        if ($groupid && $DB->record_exists('groups', ['id' => $groupid, 'courseid' => $scheduler->course])) {
+            $slot->coursegroupid = $groupid;
+            return $groupid;
+        }
+        // Create group if it does not yet exist.
+        $group = new stdClass();
+        $group->courseid = $scheduler->course;
+        $group->name = scheduler_create_coursegroupname($scheduler->name, $slot->starttime, $slot->id);
+        $time = time();
+        $group->timecreated = $time;
+        $group->timemodified = $time;
+
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $groupid = groups_create_group($group);
+            $DB->set_field('scheduler_slots', 'coursegroupid', $groupid, ['id' => $slot->id]);
+            $transaction->allow_commit();
+        } catch (\Throwable $e) {
+            $transaction->rollback($e);
+        }
+
+        $slot->coursegroupid = $groupid;
+
+        return $groupid;
+    } finally {
+        $lock->release();
+    }
+}
+
+/**
+ * Creates a unique name for a course group based on the provided slot and course data.
+ *
+ * This function constructs a name using the scheduler's name, slot's start time, and course ID,
+ * ensuring uniqueness by appending an incremented identifier if other groups share
+ * a similar name pattern.
+ *
+ * @param string $name Scheduler name.
+ * @param int $time The slot start time.
+ * @param int $slotid The slot ID.
+ * @return string The generated course group name.
+ * @throws coding_exception
+ */
+function scheduler_create_coursegroupname($name, $time, $slotid) {
+    $timezone = core_date::get_server_timezone();
+    $datetime = userdate($time, '%Y-%m-%d %H:%M', $timezone, false);
+    $suffix = ' - ' . $datetime . ' ' .  get_string('slot', 'scheduler') . ' ' . $slotid;
+    $maxlength = 254;
+    $namelength = max(0, $maxlength - core_text::strlen($suffix));
+    $shortname = core_text::substr($name, 0, $namelength);
+    return $shortname . $suffix;
+}

@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_scheduler\course_group_helper;
 use mod_scheduler\model\scheduler;
 use mod_scheduler\model\slot;
 
@@ -259,6 +260,10 @@ class scheduler_editslot_form extends scheduler_slotform_base
             $this->noteoptions
         );
         $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
+
+        // Group ID.
+        $mform->addElement('hidden', 'bookinggroupid', 0);
+        $mform->setType('bookinggroupid', PARAM_INT);
 
         // Appointments.
 
@@ -531,10 +536,12 @@ class scheduler_editslot_form extends scheduler_slotform_base
         $slot->notesformat = $editor['format'];
 
         $currentapps = $slot->get_appointments();
+        $removedappointments = [];
         for ($i = 0; $i < $data->appointment_repeats; $i++) {
             if ($data->deletestudent[$i] != 0) {
                 if ($data->appointid[$i]) {
                     $app = $slot->get_appointment($data->appointid[$i]);
+                    $removedappointments[] = $app->get_data();
                     $slot->remove_appointment($app);
                 }
             } else if ($data->studentid[$i] > 0) {
@@ -544,6 +551,7 @@ class scheduler_editslot_form extends scheduler_slotform_base
                 } else {
                     $app = $slot->create_appointment();
                     $app->studentid = $data->studentid[$i];
+                    $app->bookinggroupid = $data->bookinggroupid ?? 0;
                     $app->timecreated = time();
                     $app->save();
                 }
@@ -586,6 +594,14 @@ class scheduler_editslot_form extends scheduler_slotform_base
         }
 
         $slot->save();
+
+        // Remove students for canceled appointments.
+        foreach ($removedappointments as $appointment) {
+            course_group_helper::remove_booked_students($slot, $appointment);
+        }
+
+        // Ensure all currently booked students belong to the course group.
+        course_group_helper::add_booked_students($slot);
 
         $slot = $this->scheduler->get_slot($slot->id);
 
@@ -714,6 +730,16 @@ class scheduler_addsession_form extends scheduler_slotform_base {
 
         $mform->addElement('select', 'emaildaterel', get_string('emailreminder', 'scheduler'), $remindersel);
         $mform->setDefault('remindersel', -1);
+
+        // Slot comments.
+        $mform->addElement(
+            'editor',
+            'notes_editor',
+            get_string('comments', 'scheduler'),
+            ['rows' => 3, 'columns' => 60],
+            $this->noteoptions
+        );
+        $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
 
         $this->add_action_buttons();
     }
