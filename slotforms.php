@@ -733,11 +733,11 @@ class scheduler_addsession_form extends scheduler_slotform_base {
 
         // Slot comments.
         $mform->addElement(
-                'editor',
-                'notes_editor',
-                get_string('comments', 'scheduler'),
-                ['rows' => 3, 'columns' => 60],
-                $this->noteoptions
+            'editor',
+            'notes_editor',
+            get_string('comments', 'scheduler'),
+            ['rows' => 3, 'columns' => 60],
+            $this->noteoptions
         );
         $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
 

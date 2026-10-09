@@ -159,13 +159,13 @@ function scheduler_action_doaddsession($scheduler, $formdata, moodle_url $return
                 if (!$conflicts || $resolvable) {
                     $slotid = $DB->insert_record('scheduler_slots', $slot, true, true);
                     $notes = file_save_draft_area_files(
-                            $editor['itemid'],
-                            $context->id,
-                            'mod_scheduler',
-                            'slotnote',
-                            $slotid,
-                            $noteoptions,
-                            $editor['text']
+                        $editor['itemid'],
+                        $context->id,
+                        'mod_scheduler',
+                        'slotnote',
+                        $slotid,
+                        $noteoptions,
+                        $editor['text']
                     );
                     $DB->set_field('scheduler_slots', 'notes', $notes, ['id' => $slotid]);
                     $slotobj = $scheduler->get_slot($slotid);
