@@ -1,4 +1,4 @@
-@mod @mod_scheduler
+@mod @mod_scheduler @addslots
 Feature: Teacher can add slots to a scheduler activity
   In order to allow students to book a slot
   As a teacher
@@ -98,3 +98,19 @@ Feature: Teacher can add slots to a scheduler activity
     And I should see "2:00 AM"
     And I should see "10:00 AM"
     And I should not see "11:00 AM"
+
+  Scenario: Adding a comment to repeated slots creates a comment for each slot
+    When I log in as "teacher1"
+    And I add 3 slots 5 days ahead in "scheduler1" scheduler and I fill the form with:
+      | Location  | Here              |
+      | Comment   | This is a comment |
+    Then I should see "3 slots have been added"
+    And I should see "1:00 AM"
+    And I should see "2:00 AM"
+    And I should see "3:00 AM"
+    And I log out
+
+    When I am on the "scheduler1" Activity page logged in as "student1"
+    Then I should see "This is a comment" in the "1:00 AM" "table_row"
+    Then I should see "This is a comment" in the "2:00 AM" "table_row"
+    Then I should see "This is a comment" in the "3:00 AM" "table_row"
