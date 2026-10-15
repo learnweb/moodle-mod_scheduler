@@ -173,7 +173,17 @@ if (count($upcomingslots) > 0) {
     echo $output->render($slottable);
 }
 
-$bookablecnt = $scheduler->count_bookable_appointments($USER->id, false);
+if ($appointgroup > 0) {
+    $groupalreadybooked = $scheduler->has_slots_booked_for_group(
+        $appointgroup,
+        false,
+        $scheduler->schedulermode === 'onetime'
+    );
+    $bookablecnt = $groupalreadybooked ? 0 : 1;
+} else {
+    $bookablecnt = $scheduler->count_bookable_appointments($USER->id, false);
+}
+
 $bookableslots = array_values($scheduler->get_slots_available_to_student($USER->id, $canseefull));
 
 if (!$canseefull && $bookablecnt == 0) {
