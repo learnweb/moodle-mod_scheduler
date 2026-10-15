@@ -299,6 +299,12 @@ $string['gradingstrategy_help'] = 'In a scheduler where students can have severa
     The gradebook can show either <ul><li>the mean grade or</li><li>the maximum grade</li></ul> that the student has achieved.';
 $string['group'] = 'group ';
 $string['groupbreakdown'] = 'By group size';
+$string['bookingtype'] = 'Allowed booking types';
+$string['bookingtype_help'] = 'Choose whether students can book individually, for a group, or both.
+For group bookings only, students must select one of their eligible groups and cannot select "Myself".';
+$string['bookingtypeindividual'] = 'Individual bookings only';
+$string['bookingtypeboth'] = 'Individual and group bookings';
+$string['bookingtypegroup'] = 'Group bookings only';
 $string['groupbookings'] = 'Booking in groups';
 $string['groupbookings_help'] = 'Allow students to book a slot for all members of their group.
 (Note that this is separate from the "group mode" setting, which controls the slots a student can see.)';
