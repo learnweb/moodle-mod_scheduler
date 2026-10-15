@@ -469,7 +469,6 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         $groupbookingtype = get_config('mod_scheduler', 'mixindivgroup') ? 1 : 2;
 
         $DB->set_field_select('scheduler', 'bookingtype', $groupbookingtype, 'bookingrouping >= 0');
-        $DB->set_field_select('scheduler', 'bookingtype', 0, 'bookingrouping = -1');
 
         upgrade_mod_savepoint(true, 2026101500, 'scheduler');
     }

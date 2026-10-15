@@ -22,7 +22,7 @@
         <FIELD NAME="gradingstrategy" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="groupcreation" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="bookingrouping" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="-1" SEQUENCE="false" COMMENT="Groups can be scheduled from this grouping, -1 if none, 0 if all"/>
-        <FIELD NAME="bookingtype" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Type of bookings allowed. Individually, only in groups, or both."/>
+        <FIELD NAME="bookingtype" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Type of bookings allowed. Individually and in groups or only in groups."/>
         <FIELD NAME="usenotes" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Which types of notes to show for appointments"/>
         <FIELD NAME="usebookingform" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="whether a booking form is used"/>
         <FIELD NAME="bookinginstructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Text field with instructions for booking"/>

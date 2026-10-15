@@ -300,9 +300,8 @@ $string['gradingstrategy_help'] = 'In a scheduler where students can have severa
 $string['group'] = 'group ';
 $string['groupbreakdown'] = 'By group size';
 $string['bookingtype'] = 'Allowed booking types';
-$string['bookingtype_help'] = 'Choose whether students can book individually, for a group, or both.
-For group bookings only, students must select one of their eligible groups and cannot select "Myself".';
-$string['bookingtypeindividual'] = 'Individual bookings only';
+$string['bookingtype_help'] = 'Choose whether students can book both individually and for a group, or only for a group.
+If only group bookings are allowed, students must select one of their eligible groups. The "Myself" option is not available.';
 $string['bookingtypeboth'] = 'Individual and group bookings';
 $string['bookingtypegroup'] = 'Group bookings only';
 $string['groupbookings'] = 'Booking in groups';
@@ -333,8 +332,8 @@ $string['includeslotsfor'] = 'Include slots for';
 $string['incourse'] = ' in course ';
 $string['keepattendedincalendar'] = 'Keep attended appointments in calendar';
 $string['keepattendedincalendar_desc'] = 'If enabled, appointments remain visible in participants’ calendars after they have been marked as attended. If disabled, attended appointments are removed from the calendar.';
-$string['mixindivgroup'] = 'Mix individual and group bookings';
-$string['mixindivgroup_desc'] = 'Where group scheduling is enabled, allow individual bookings as well.';
+$string['mixindivgroup'] = 'Allow individual bookings by default';
+$string['mixindivgroup_desc'] = 'Default for new scheduler activities with group booking enabled. Teachers can change the allowed booking types in each activity.';
 $string['introduction'] = 'Introduction';
 $string['isnonexclusive'] = 'Non-exclusive';
 $string['landscape'] = 'Landscape';

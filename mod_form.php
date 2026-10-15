@@ -107,9 +107,8 @@ class mod_scheduler_mod_form extends moodleform_mod
             $mform->addHelpButton('bookingrouping', 'groupbookings', 'scheduler');
             $mform->setDefault('bookingrouping', '-1');
 
-            // Type of bookings allowed. Individually, only in groups, or both.
+            // Allowed booking types when group booking is enabled.
             $bookingtypes = [
-                0 => get_string('bookingtypeindividual', 'scheduler'),
                 1 => get_string('bookingtypeboth', 'scheduler'),
                 2 => get_string('bookingtypegroup', 'scheduler'),
             ];

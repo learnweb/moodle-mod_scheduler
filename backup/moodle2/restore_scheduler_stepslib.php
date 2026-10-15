@@ -81,11 +81,7 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         }
 
         if (!isset($data->bookingtype)) {
-            if ($data->bookingrouping < 0) {
-                $data->bookingtype = 0;
-            } else {
-                $data->bookingtype = get_config('mod_scheduler', 'mixindivgroup') ? 1 : 2;
-            }
+            $data->bookingtype = get_config('mod_scheduler', 'mixindivgroup') ? 1 : 2;
         }
 
         if ($data->bookingrouping > 0) {

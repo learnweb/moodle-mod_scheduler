@@ -268,10 +268,8 @@ class scheduler extends mvc_record_model
      */
     public function is_group_scheduling_enabled() {
         $globalenable = (bool) get_config('mod_scheduler', 'groupscheduling');
-        $bookingtype = $this->bookingtype;
-        $bookingtypeenable = $bookingtype == 1 || $bookingtype == 2;
         $localenable = $this->bookingrouping >= 0;
-        return $globalenable && $localenable && $bookingtypeenable;
+        return $globalenable && $localenable;
     }
 
     /**
