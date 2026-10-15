@@ -1,4 +1,4 @@
-@mod @mod_scheduler @addslots
+@mod @mod_scheduler
 Feature: Teacher can add slots to a scheduler activity
   In order to allow students to book a slot
   As a teacher

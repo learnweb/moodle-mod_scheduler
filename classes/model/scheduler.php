@@ -755,7 +755,7 @@ class scheduler extends mvc_record_model
         global $DB;
 
         $params = [];
-        $wherecond = "(s.starttime > :cutofftime) AND (s.hideuntil < :nowhide)";
+        $wherecond = "(s.starttime > :cutofftime) AND (s.hideuntil <= :nowhide)";
         $params['nowhide'] = time();
         $params['cutofftime'] = time() + $this->guardtime;
         $subcond = 'NOT (' . $this->student_in_slot_condition($params, $studentid, false, false) . ')';
