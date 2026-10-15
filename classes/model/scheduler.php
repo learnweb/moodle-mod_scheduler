@@ -267,22 +267,24 @@ class scheduler extends mvc_record_model
      * @return boolean
      */
     public function is_group_scheduling_enabled() {
-        global $CFG;
         $globalenable = (bool) get_config('mod_scheduler', 'groupscheduling');
+        $bookingtype = $this->bookingtype;
+        $bookingtypeenable = $bookingtype == 1 || $bookingtype == 2;
         $localenable = $this->bookingrouping >= 0;
-        return $globalenable && $localenable;
+        return $globalenable && $localenable && $bookingtypeenable;
     }
 
     /**
      * Retrieve whether individual scheduling is enabled in this instance.
-     * This is usually the case, but is disabled if the instance uses group scheduling
-     * and the configuration setting 'mixindivgroup' is set to inactive.
+     * Individual bookings are always allowed when group scheduling is disabled.
+     * Otherwise, the instance must allow both individual and group bookings.
      *
      * @return boolean
      */
     public function is_individual_scheduling_enabled() {
         if ($this->is_group_scheduling_enabled()) {
-            return (bool) get_config('mod_scheduler', 'mixindivgroup');
+            $bookingtype = $this->bookingtype;
+            return $bookingtype == 1;
         } else {
             return true;
         }

@@ -459,5 +459,19 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
 
         upgrade_mod_savepoint(true, 2026100100, 'scheduler');
     }
+
+    if ($oldversion < 2026101500) {
+        $table = new xmldb_table('scheduler');
+        $field = new xmldb_field('bookingtype', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', 'bookingrouping');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $groupbookingtype = get_config('mod_scheduler', 'mixindivgroup') ? 1 : 2;
+
+        $DB->set_field_select('scheduler', 'bookingtype', $groupbookingtype, 'bookingrouping >= 0');
+        $DB->set_field_select('scheduler', 'bookingtype', 0, 'bookingrouping = -1');
+
+        upgrade_mod_savepoint(true, 2026101500, 'scheduler');
+    }
     return true;
 }
