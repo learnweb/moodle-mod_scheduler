@@ -44,7 +44,7 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         $scheduler = new backup_nested_element('scheduler', ['id'], [
             'name', 'intro', 'introformat', 'schedulermode', 'maxbookings',
             'guardtime', 'defaultslotduration', 'allownotifications', 'staffrolename',
-            'scale', 'gradingstrategy', 'bookingrouping', 'usenotes',
+            'scale', 'gradingstrategy', 'bookingrouping', 'bookingtype', 'usenotes',
             'usebookingform', 'bookinginstructions', 'bookinginstructionsformat',
             'usestudentnotes', 'requireupload', 'uploadmaxfiles', 'uploadmaxsize',
             'usecaptcha', 'timemodified', 'groupcreation', ]);
