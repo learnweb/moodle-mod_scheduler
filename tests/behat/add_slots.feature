@@ -116,3 +116,24 @@ Feature: Teacher can add slots to a scheduler activity
       | 1:00 AM  | Here     | This is a comment |
       | 2:00 AM  | Here     | This is a comment |
       | 3:00 AM  | Here     | This is a comment |
+
+  Scenario: Teacher must enter a valid meeting link
+    Given I am on the "scheduler1" Activity page logged in as "teacher1"
+    And I click on "Add slots" "link"
+    And I follow "Add single slot"
+    And I set the following fields to these values:
+      | starttime[day]   | 1         |
+      | starttime[month] | April     |
+      | starttime[year]  | 2050      |
+      | duration         | 30        |
+      | Meeting link     | not-a-url |
+
+    When I click on "Save changes" "button"
+    Then I should see "Enter a valid link starting with https:// or http://."
+
+    When I set the field "Meeting link" to "https://example.com/test-meeting"
+    And I click on "Save changes" "button"
+    Then I should see "1 slot added"
+    And "Join online meeting" "link" should exist
+    And "a[href='https://example.com/test-meeting']" "css_element" should exist
+    And I log out
