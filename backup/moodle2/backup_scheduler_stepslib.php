@@ -52,7 +52,7 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         $slots = new backup_nested_element('slots');
 
         $slot = new backup_nested_element('slot', ['id'], [
-            'starttime', 'duration', 'teacherid', 'appointmentlocation',
+            'starttime', 'duration', 'teacherid', 'appointmentlocation', 'meetingurl',
             'timemodified', 'notes', 'notesformat', 'exclusivity',
             'emaildate', 'hideuntil', 'coursegroupid', ]);
 

@@ -105,6 +105,7 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         global $DB;
 
         $data = (object)$data;
+        $data->meetingurl = $data->meetingurl ?? '';
         $oldid = $data->id;
 
         $data->schedulerid = $this->get_new_parentid('scheduler');
