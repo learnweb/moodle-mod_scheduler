@@ -1,4 +1,4 @@
-@mod @mod_scheduler @groupscheduling
+@mod @mod_scheduler @groupschedulingss
 Feature: Entire groups can be booked into slots at once
   In order to allow booking of entire groups
   As a teacher
@@ -173,3 +173,55 @@ Feature: Entire groups can be booked into slots at once
     And I should not see "Student 2" in the "8:00 AM" "table_row"
     And I should see "Student 1" in the "9:00 AM" "table_row"
     And I should see "Student 3" in the "9:00 AM" "table_row"
+
+  Scenario: Group bookings turned off should should not show appoint group selection to students
+    Given I am logged in as edteacher1
+    And I am on the "schedulerNone" Activity page logged in as edteacher1
+    And I navigate to "Settings" in current page administration
+    And I set the following fields to these values:
+      | Booking in groups | No |
+    And I click on "Save and return to course" "button"
+    And I add 8 slots 5 days ahead in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    Then "select[name='appointgroup']" "css_element" should not exist
+    And "Book slot" "button" should exist
+
+  Scenario: Group bookings allowed and allowed booking type is "individual and group bookings" should show "Myself" and group selection to students
+    Given I am logged in as edteacher1
+    And I am on the "schedulerNone" Activity page logged in as edteacher1
+    And I navigate to "Settings" in current page administration
+    And I set the following fields to these values:
+      | Booking in groups    | Yes, for all groups           |
+      | Allowed booking type | Individual and group bookings |
+    And I click on "Save and return to course" "button"
+    And I add 8 slots 5 days ahead in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    Then the "appointgroup" select box should contain "Myself"
+    And the "appointgroup" select box should contain "Group A1"
+    And the "appointgroup" select box should contain "Group B1"
+
+  Scenario: Group bookings allowed and allowed booking type is "group bookings only" should show group selection to students but not "Myself"
+    Given I am logged in as edteacher1
+    And I am on the "schedulerNone" Activity page logged in as edteacher1
+    And I navigate to "Settings" in current page administration
+    And I set the following fields to these values:
+      | Booking in groups    | Yes, for all groups           |
+      | Allowed booking type | Group bookings only           |
+    And I click on "Save and return to course" "button"
+    And I add 8 slots 5 days ahead in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    Then the "appointgroup" select box should not contain "Myself"
+    And the "appointgroup" select box should contain "Group A1"
+    And the "appointgroup" select box should contain "Group B1"
