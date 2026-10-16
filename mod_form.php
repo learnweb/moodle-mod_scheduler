@@ -92,6 +92,7 @@ class mod_scheduler_mod_form extends moodleform_mod
         $mform->addGroup($modegroup, 'modegrp', get_string('mode', 'scheduler'), ' ', false);
         $mform->addHelpButton('modegrp', 'appointmentmode', 'scheduler');
 
+        // Booking in groups.
         if (get_config('mod_scheduler', 'groupscheduling')) {
             $selopt = [
                             -1 => get_string('no'),
@@ -105,7 +106,28 @@ class mod_scheduler_mod_form extends moodleform_mod
             $mform->addElement('select', 'bookingrouping', get_string('groupbookings', 'scheduler'), $selopt);
             $mform->addHelpButton('bookingrouping', 'groupbookings', 'scheduler');
             $mform->setDefault('bookingrouping', '-1');
+
+            // Allowed booking types when group booking is enabled.
+            $bookingtypes = [
+                1 => get_string('bookingtypeboth', 'scheduler'),
+                2 => get_string('bookingtypegroup', 'scheduler'),
+            ];
+
+            $mform->addElement('select', 'bookingtype', get_string('bookingtype', 'scheduler'), $bookingtypes);
+            $mform->addHelpButton('bookingtype', 'bookingtype', 'scheduler');
+            $mform->setDefault('bookingtype', get_config('mod_scheduler', 'mixindivgroup') ? 1 : 2);
+            $mform->hideIf('bookingtype', 'bookingrouping', 'eq', '-1');
         }
+
+        // Automatic course group creation.
+        $mform->addElement(
+            'select',
+            'groupcreation',
+            get_string('groupcreation', 'scheduler'),
+            $this->get_group_creation_options()
+        );
+        $mform->addHelpButton('groupcreation', 'groupcreation', 'scheduler');
+        $mform->setDefault('groupcreation', '0');
 
         $mform->addElement('duration', 'guardtime', get_string('guardtime', 'scheduler'), ['optional' => true]);
         $mform->addHelpButton('guardtime', 'guardtime', 'scheduler');
@@ -260,5 +282,44 @@ class mod_scheduler_mod_form extends moodleform_mod
             $data->bookinginstructionsformat = $editor['format'];
             $DB->update_record('scheduler', $data);
         }
+    }
+
+    /**
+     * Validation to not allow contradictory group slot settings. When only group bookings are allowed, automatic group
+     * creation should never happen.
+     *
+     * @param array $data Submitted form values.
+     * @param array $files Submitted files.
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        $grouponly = get_config('mod_scheduler', 'groupscheduling')
+                && ($data['bookingrouping'] ?? -1) >= 0
+                && (int) ($data['bookingtype'] ?? 1) === 2;
+
+        if ($grouponly && (int) ($data['groupcreation'] ?? 0) !== 0) {
+            $errors['groupcreation'] =
+                    get_string('groupcreationrequiresindividual', 'scheduler');
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Retrieves the available scheduler group modes for the automatic group creation from a slot.
+     *
+     * @return array
+     * @throws coding_exception
+     */
+    private function get_group_creation_options() {
+        $groupcreationoptions = [];
+        $groupcreationoptions[0] = get_string('nogroupcreation', 'scheduler');
+        $groupcreationoptions[1] = get_string('groupcreationforslot', 'scheduler');
+        $groupcreationoptions[2] = get_string('groupcreationforbooking', 'scheduler');
+        return $groupcreationoptions;
     }
 }
