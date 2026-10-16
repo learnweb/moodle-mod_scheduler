@@ -288,8 +288,8 @@ class mod_scheduler_mod_form extends moodleform_mod
      * Validation to not allow contradictory group slot settings. When only group bookings are allowed, automatic group
      * creation should never happen.
      *
-     * @param $data
-     * @param $files
+     * @param array $data Submitted form values.
+     * @param array $files Submitted files.
      * @return array
      * @throws coding_exception
      * @throws dml_exception
