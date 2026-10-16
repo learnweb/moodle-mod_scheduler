@@ -1,4 +1,4 @@
-@mod @mod_scheduler @groupschedulingss
+@mod @mod_scheduler @groupscheduling
 Feature: Entire groups can be booked into slots at once
   In order to allow booking of entire groups
   As a teacher
