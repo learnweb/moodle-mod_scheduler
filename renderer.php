@@ -742,16 +742,16 @@ class mod_scheduler_renderer extends plugin_renderer_base
             $location = format_string($slot->location);
             if (!empty($slot->meetingurl)) {
                 $location .= html_writer::div(
-                        html_writer::link(
-                                new moodle_url($slot->meetingurl),
-                                get_string('joinmeeting', 'scheduler'),
-                                [
+                    html_writer::link(
+                        new moodle_url($slot->meetingurl),
+                        get_string('joinmeeting', 'scheduler'),
+                        [
                                         'class' => 'btn btn-secondary',
                                         'target' => '_blank',
                                         'rel' => 'noopener noreferrer',
                                 ]
-                        ),
-                        'mt-2'
+                    ),
+                    'mt-2'
                 );
             }
             $rowdata[] = $location;
@@ -916,16 +916,16 @@ class mod_scheduler_renderer extends plugin_renderer_base
             $location = format_string($slot->location);
             if (!empty($slot->meetingurl)) {
                 $location .= html_writer::div(
-                        html_writer::link(
-                                new moodle_url($slot->meetingurl),
-                                get_string('joinmeeting', 'scheduler'),
-                                [
+                    html_writer::link(
+                        new moodle_url($slot->meetingurl),
+                        get_string('joinmeeting', 'scheduler'),
+                        [
                                         'class' => 'btn btn-secondary',
                                         'target' => '_blank',
                                         'rel' => 'noopener noreferrer',
                                 ]
-                        ),
-                        'mt-2'
+                    ),
+                    'mt-2'
                 );
             }
             $rowdata[] = $location;
