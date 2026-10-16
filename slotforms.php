@@ -115,6 +115,11 @@ abstract class scheduler_slotform_base extends moodleform
         $mform->setDefault('appointmentlocation', $this->scheduler->get_last_location($USER));
         $mform->addHelpButton('appointmentlocation', 'location', 'scheduler');
 
+        // Optional meeting link.
+        $mform->addElement('text', 'meetingurl', get_string('meetingurl', 'scheduler'), ['size' => '60']);
+        $mform->setType('meetingurl', PARAM_URL);
+        $mform->addHelpButton('meetingurl', 'meetingurl', 'scheduler');
+
         // Choose the teacher (if allowed).
         if (has_capability('mod/scheduler:canscheduletootherteachers', $this->scheduler->get_context())) {
             $teachername = s($this->scheduler->get_teacher_name());
