@@ -102,6 +102,7 @@ class scheduler_slot_table implements renderable
         $slot->endtime = $slotmodel->endtime;
         $slot->attended = $appointmentmodel->attended;
         $slot->location = $slotmodel->appointmentlocation;
+        $slot->meetingurl = $slotmodel->meetingurl;
         $slot->slotnote = $slotmodel->notes;
         $slot->slotnoteformat = $slotmodel->notesformat;
         $slot->teacher = $slotmodel->get_teacher();
@@ -282,6 +283,7 @@ class scheduler_slot_booker implements renderable
         $slot->starttime = $slotmodel->starttime;
         $slot->endtime = $slotmodel->endtime;
         $slot->location = $slotmodel->appointmentlocation;
+        $slot->meetingurl = $bookedbyme ? $slotmodel->meetingurl : '';
         $slot->notes = $slotmodel->notes;
         $slot->notesformat = $slotmodel->notesformat;
         $slot->bookedbyme = $bookedbyme;
@@ -445,6 +447,7 @@ class scheduler_slot_manager implements renderable
         $slot->starttime = $slotmodel->starttime;
         $slot->endtime = $slotmodel->endtime;
         $slot->location = $slotmodel->appointmentlocation;
+        $slot->meetingurl = $slotmodel->meetingurl;
         $slot->teacher = $slotmodel->get_teacher();
         $slot->students = $students;
         $slot->editable = $editable;

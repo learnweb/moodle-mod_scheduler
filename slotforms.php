@@ -117,7 +117,7 @@ abstract class scheduler_slotform_base extends moodleform
 
         // Optional meeting link.
         $mform->addElement('text', 'meetingurl', get_string('meetingurl', 'scheduler'), ['size' => '60']);
-        $mform->setType('meetingurl', PARAM_URL);
+        $mform->setType('meetingurl', PARAM_RAW_TRIMMED);
         $mform->addHelpButton('meetingurl', 'meetingurl', 'scheduler');
 
         // Choose the teacher (if allowed).
@@ -182,6 +182,18 @@ abstract class scheduler_slotform_base extends moodleform
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+        $meetingurl = $data['meetingurl'] ?? '';
+
+        if ($meetingurl != '') {
+            if (\core_text::strlen($meetingurl) > 2048) {
+                $errors['meetingurl'] = get_string('meetingurltoolong', 'scheduler');
+            } else if (
+                !preg_match('~^https?://~i', $meetingurl) ||
+                clean_param($meetingurl, PARAM_URL) !== $meetingurl
+            ) {
+                $errors['meetingurl'] = get_string('invalidmeetingurl', 'scheduler');
+            }
+        }
 
         // Check duration for valid range.
         if ($this->hasduration) {

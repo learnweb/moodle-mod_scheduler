@@ -502,7 +502,22 @@ class mod_scheduler_renderer extends plugin_renderer_base
             }
 
             if ($slottable->showslot && $slottable->showlocation) {
-                $rowdata[] = format_string($slot->location);
+                $location = format_string($slot->location);
+                if (!empty($slot->meetingurl)) {
+                    $location .= html_writer::div(
+                        html_writer::link(
+                            new moodle_url($slot->meetingurl),
+                            get_string('joinmeeting', 'scheduler'),
+                            [
+                                'class' => 'btn btn-secondary',
+                                'target' => '_blank',
+                                'rel' => 'noopener noreferrer',
+                            ]
+                        ),
+                        'mt-2'
+                    );
+                }
+                $rowdata[] = $location;
             }
 
             $notes = '';
@@ -724,7 +739,22 @@ class mod_scheduler_renderer extends plugin_renderer_base
             $rowdata[] = $starttimestr;
             $rowdata[] = $endtimestr;
 
-            $rowdata[] = format_string($slot->location);
+            $location = format_string($slot->location);
+            if (!empty($slot->meetingurl)) {
+                $location .= html_writer::div(
+                        html_writer::link(
+                                new moodle_url($slot->meetingurl),
+                                get_string('joinmeeting', 'scheduler'),
+                                [
+                                        'class' => 'btn btn-secondary',
+                                        'target' => '_blank',
+                                        'rel' => 'noopener noreferrer',
+                                ]
+                        ),
+                        'mt-2'
+                );
+            }
+            $rowdata[] = $location;
 
             $rowdata[] = $this->format_notes(
                 $slot->notes,
@@ -883,7 +913,22 @@ class mod_scheduler_renderer extends plugin_renderer_base
             $rowdata[] = $starttimestr;
             $rowdata[] = $endtimestr;
 
-            $rowdata[] = format_string($slot->location);
+            $location = format_string($slot->location);
+            if (!empty($slot->meetingurl)) {
+                $location .= html_writer::div(
+                        html_writer::link(
+                                new moodle_url($slot->meetingurl),
+                                get_string('joinmeeting', 'scheduler'),
+                                [
+                                        'class' => 'btn btn-secondary',
+                                        'target' => '_blank',
+                                        'rel' => 'noopener noreferrer',
+                                ]
+                        ),
+                        'mt-2'
+                );
+            }
+            $rowdata[] = $location;
 
             $rowdata[] = $this->render($slot->students);
 
@@ -1121,6 +1166,24 @@ class mod_scheduler_renderer extends plugin_renderer_base
                 $row = new html_table_row();
                 $cell1 = new html_table_cell(get_string('location', 'scheduler'));
                 $cell2 = new html_table_cell(format_string($ai->slot->appointmentlocation));
+                $row->cells = [$cell1, $cell2];
+                $t->data[] = $row;
+            }
+
+            global $USER;
+            $canjoinmeeting = !$ai->onstudentside || $ai->slot->is_booked_by_student($USER->id);
+            if ($canjoinmeeting && !empty($ai->slot->meetingurl)) {
+                $row = new html_table_row();
+                $cell1 = new html_table_cell(get_string('meetingurl', 'scheduler'));
+                $cell2 = new html_table_cell(html_writer::link(
+                    new moodle_url($ai->slot->meetingurl),
+                    get_string('joinmeeting', 'scheduler'),
+                    [
+                        'class' => 'btn btn-secondary',
+                        'target' => '_blank',
+                        'rel' => 'noopener noreferrer',
+                    ]
+                ));
                 $row->cells = [$cell1, $cell2];
                 $t->data[] = $row;
             }
