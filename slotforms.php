@@ -520,6 +520,7 @@ class scheduler_editslot_form extends scheduler_slotform_base
         $slot->exclusivity = $data->exclusivityenable ? $data->exclusivity : 0;
         $slot->teacherid = $data->teacherid;
         $slot->appointmentlocation = $data->appointmentlocation;
+        $slot->meetingurl = $data->meetingurl;
         $slot->hideuntil = $data->hideuntil;
         $slot->emaildate = $data->emaildate;
         $slot->timemodified = time();
