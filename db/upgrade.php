@@ -473,14 +473,16 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2026101500, 'scheduler');
     }
 
-    if ($oldversion < 2026101600) {
+    if ($oldversion < 2026101603) {
         $table = new xmldb_table('scheduler_slots');
-        $field = new xmldb_field('meetingurl', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, "", 'appointmentlocation');
+        $field = new xmldb_field('meetingurl', XMLDB_TYPE_TEXT, null, null, null, null, null, 'appointmentlocation');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
+        } else {
+            $dbman->change_field_type($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2026101600, 'scheduler');
+        upgrade_mod_savepoint(true, 2026101603, 'scheduler');
     }
     return true;
 }
