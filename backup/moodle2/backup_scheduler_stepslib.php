@@ -44,22 +44,22 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         $scheduler = new backup_nested_element('scheduler', ['id'], [
             'name', 'intro', 'introformat', 'schedulermode', 'maxbookings',
             'guardtime', 'defaultslotduration', 'allownotifications', 'staffrolename',
-            'scale', 'gradingstrategy', 'bookingrouping', 'usenotes',
+            'scale', 'gradingstrategy', 'bookingrouping', 'bookingtype', 'usenotes',
             'usebookingform', 'bookinginstructions', 'bookinginstructionsformat',
             'usestudentnotes', 'requireupload', 'uploadmaxfiles', 'uploadmaxsize',
-            'usecaptcha', 'timemodified', ]);
+            'usecaptcha', 'timemodified', 'groupcreation', ]);
 
         $slots = new backup_nested_element('slots');
 
         $slot = new backup_nested_element('slot', ['id'], [
-            'starttime', 'duration', 'teacherid', 'appointmentlocation',
+            'starttime', 'duration', 'teacherid', 'appointmentlocation', 'meetingurl',
             'timemodified', 'notes', 'notesformat', 'exclusivity',
-            'emaildate', 'hideuntil', ]);
+            'emaildate', 'hideuntil', 'coursegroupid', ]);
 
         $appointments = new backup_nested_element('appointments');
 
         $appointment = new backup_nested_element('appointment', ['id'], [
-            'studentid', 'attended', 'grade',
+            'studentid', 'bookinggroupid', 'attended', 'grade',
             'appointmentnote', 'appointmentnoteformat', 'teachernote', 'teachernoteformat',
             'studentnote', 'studentnoteformat', 'timecreated', 'timemodified', ]);
 
@@ -86,7 +86,9 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
 
         if ($userinfo) {
             $slot->annotate_ids('user', 'teacherid');
+            $slot->annotate_ids('group', 'coursegroupid');
             $appointment->annotate_ids('user', 'studentid');
+            $appointment->annotate_ids('group', 'bookinggroupid');
         }
 
         // Define file annotations.
