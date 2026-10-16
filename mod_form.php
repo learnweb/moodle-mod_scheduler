@@ -285,19 +285,15 @@ class mod_scheduler_mod_form extends moodleform_mod
     }
 
     /**
-     * Retrieves the available scheduler group modes for the automatic group creation from a slot.
+     * Validation to not allow contradictory group slot settings. When only group bookings are allowed, automatic group
+     * creation should never happen.
      *
+     * @param $data
+     * @param $files
      * @return array
      * @throws coding_exception
+     * @throws dml_exception
      */
-    private function get_group_creation_options() {
-        $groupcreationoptions = [];
-        $groupcreationoptions[0] = get_string('nogroupcreation', 'scheduler');
-        $groupcreationoptions[1] = get_string('groupcreationforslot', 'scheduler');
-        $groupcreationoptions[2] = get_string('groupcreationforbooking', 'scheduler');
-        return $groupcreationoptions;
-    }
-
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
@@ -311,5 +307,19 @@ class mod_scheduler_mod_form extends moodleform_mod
         }
 
         return $errors;
+    }
+
+    /**
+     * Retrieves the available scheduler group modes for the automatic group creation from a slot.
+     *
+     * @return array
+     * @throws coding_exception
+     */
+    private function get_group_creation_options() {
+        $groupcreationoptions = [];
+        $groupcreationoptions[0] = get_string('nogroupcreation', 'scheduler');
+        $groupcreationoptions[1] = get_string('groupcreationforslot', 'scheduler');
+        $groupcreationoptions[2] = get_string('groupcreationforbooking', 'scheduler');
+        return $groupcreationoptions;
     }
 }
