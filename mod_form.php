@@ -297,4 +297,19 @@ class mod_scheduler_mod_form extends moodleform_mod
         $groupcreationoptions[2] = get_string('groupcreationforbooking', 'scheduler');
         return $groupcreationoptions;
     }
+
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        $grouponly = get_config('mod_scheduler', 'groupscheduling')
+                && ($data['bookingrouping'] ?? -1) >= 0
+                && (int) ($data['bookingtype'] ?? 1) === 2;
+
+        if ($grouponly && (int) ($data['groupcreation'] ?? 0) !== 0) {
+            $errors['groupcreation'] =
+                    get_string('groupcreationrequiresindividual', 'scheduler');
+        }
+
+        return $errors;
+    }
 }

@@ -304,6 +304,7 @@ $string['bookingtype_help'] = 'Choose whether students can book both individuall
 If only group bookings are allowed, students must select one of their eligible groups. The "Myself" option is not available.';
 $string['bookingtypeboth'] = 'Individual and group bookings';
 $string['bookingtypegroup'] = 'Group bookings only';
+$string['groupcreationrequiresindividual'] = 'Automatic group creation requires individual bookings to be allowed. Select "Never" or allow individual bookings.';
 $string['groupbookings'] = 'Booking in groups';
 $string['groupbookings_help'] = 'Allow students to book a slot for all members of their group.
 (Note that this is separate from the "group mode" setting, which controls the slots a student can see.)';
