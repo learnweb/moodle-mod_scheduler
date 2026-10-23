@@ -206,6 +206,9 @@ $string['confirmdelete-unused'] = 'This will delete all unused slots in this sch
 $string['confirmrevoke'] = 'Revoke all appointments in the current slot?';
 $string['conflictingslots'] = 'The slot on {$a} cannot be created due to conflicting slots:';
 $string['copytomyself'] = 'Send a copy to myself';
+$string['copyslotsonduplicate'] = 'Copy slots when duplicating.';
+$string['copyslotsonduplicate_help'] = 'If enabled slots this scheduler activity will also duplicate existing slots.'
+. 'Bookings and personal appointment data are not copied.';
 $string['count_of_total_groups'] = '<strong>{$a->count}</strong> of {$a->total} groups';
 $string['course'] = 'Course';
 $string['coursegrouplocktimeout'] = 'The course group is currently being updated. Please try again.';

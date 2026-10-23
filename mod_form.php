@@ -147,6 +147,11 @@ class mod_scheduler_mod_form extends moodleform_mod
         $mform->addElement('select', 'usenotes', get_string('usenotes', 'scheduler'), $noteoptions);
         $mform->setDefault('usenotes', '1');
 
+        $mform->addElement('selectyesno', 'copyslotsonduplicate', get_string('copyslotsonduplicate', 'scheduler'));
+        $mform->setType('copyslotsonduplicate', PARAM_INT);
+        $mform->setDefault('copyslotsonduplicate', 0);
+        $mform->addHelpButton('copyslotsonduplicate', 'copyslotsonduplicate', 'scheduler');
+
         // Grade settings.
         $this->standard_grading_coursemodule_elements();
 
