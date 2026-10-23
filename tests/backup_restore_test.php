@@ -45,6 +45,9 @@ final class backup_restore_test extends \advanced_testcase {
      * @throws \core\exception\coding_exception
      * @throws \core\exception\moodle_exception
      * @throws \dml_exception
+     *
+     * @covers \backup_scheduler_activity_structure_step
+     * @covers \restore_scheduler_activity_structure_step
      */
     public function test_duplicate_with_copying_slots(): void {
         global $DB;
