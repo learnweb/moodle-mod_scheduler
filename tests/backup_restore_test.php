@@ -34,6 +34,7 @@ final class backup_restore_test extends \advanced_testcase {
 
         require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
         require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+        require_once($CFG->dirroot . '/course/lib.php');
     }
 
     /**
@@ -81,7 +82,14 @@ final class backup_restore_test extends \advanced_testcase {
 
         $this->assertEquals(1, $DB->count_records('scheduler_appointment', ['slotid' => $originalslot->id]));
 
-        $duplicatecm = \core_courseformat\formatactions::cm($course)->duplicate($scheduler->cmid);
+        $actions = \core_courseformat\formatactions::cm($course);
+
+        if (method_exists($actions, 'duplicate')) {
+            $duplicatecm = $actions->duplicate($scheduler->cmid);
+        } else {
+            $cm = get_fast_modinfo($course)->get_cm($scheduler->cmid);
+            $duplicatecm = duplicate_module($course, $cm);
+        }
 
         $this->assertNotNull($duplicatecm);
 
