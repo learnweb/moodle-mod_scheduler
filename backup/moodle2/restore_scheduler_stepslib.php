@@ -30,14 +30,51 @@
  */
 class restore_scheduler_activity_structure_step extends restore_activity_structure_step
 {
+    /** @var bool Whether this is a duplication within the same course. */
+    protected $isduplicate = false;
+
+    /** @var bool Whether slots may be copied without appointment data. */
+    protected $copyslots = false;
+
     /**
      * define_structure
      *
      * @return array
      */
     protected function define_structure() {
+        global $DB;
 
-        $paths = [];
+        $userinfo = $this->get_setting_value('userinfo');
+        $task = $this->get_task();
+
+        $restoreinfo = $DB->get_record(
+            'backup_controllers',
+            ['backupid' => $task->get_restoreid()],
+            'type, purpose, interactive',
+            MUST_EXIST
+        );
+
+        $this->isduplicate =
+                $restoreinfo->type === backup::TYPE_1ACTIVITY
+                && (int) $restoreinfo->purpose === backup::MODE_IMPORT
+                && (bool) $restoreinfo->interactive === backup::INTERACTIVE_NO
+                && $task->is_samesite()
+                && (int) $task->get_old_courseid() === (int) $this->get_courseid();
+
+        $paths = [new restore_path_element('scheduler', '/activity/scheduler')];
+        if ($userinfo || $this->isduplicate) {
+            $paths[] = new restore_path_element('scheduler_slot', '/activity/scheduler/slots/slot');
+        }
+
+        if ($userinfo) {
+            $paths[] = new restore_path_element(
+                'scheduler_appointment',
+                '/activity/scheduler/slots/slot/appointments/appointment'
+            );
+        }
+
+        return $this->prepare_activity_structure($paths);
+
         $userinfo = $this->get_setting_value('userinfo');
 
         $scheduler = new restore_path_element('scheduler', '/activity/scheduler');
@@ -85,10 +122,21 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         }
 
         if ($data->bookingrouping > 0) {
-            $data->bookingrouping = $this->get_mappingid('grouping', $data->bookingrouping);
+            if ($this->isduplicate) {
+                $DB->get_record(
+                    'groupings',
+                    ['id' => $data->bookingrouping, 'courseid' => $this->get_courseid()],
+                    'id',
+                    MUST_EXIST
+                );
+            } else {
+                $data->bookingrouping = $this->get_mappingid('grouping', $data->bookingrouping);
+            }
         }
 
         $data->groupcreation = (int) ($data->groupcreation ?? 0);
+        $data->copyslotsonduplicate = (int) ($data->copyslotsonduplicate ?? 0);
+        $this->copyslots = $this->isduplicate && !empty($data->copyslotsonduplicate);
 
         // Insert the scheduler record.
         $newitemid = $DB->insert_record('scheduler', $data);
@@ -104,6 +152,10 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
     protected function process_scheduler_slot($data) {
         global $DB;
 
+        $userinfo = $this->get_setting_value('userinfo');
+        if (!$userinfo && !$this->copyslots) {
+            return self::SKIP_ALL_CHILDREN;
+        }
         $data = (object)$data;
         $data->meetingurl = $data->meetingurl ?? '';
         $oldid = $data->id;
@@ -113,11 +165,37 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $data->timemodified = $this->apply_date_offset($data->timemodified);
         $data->emaildate = $this->apply_date_offset($data->emaildate);
         $data->hideuntil = $this->apply_date_offset($data->hideuntil);
-        $data->teacherid = $this->get_mappingid('user', $data->teacherid);
+        if ($this->copyslots && !$userinfo) {
+            // Same-site, same-course duplication retains existing references.
+            if (!empty($data->teacherid)) {
+                $DB->get_record(
+                    'user',
+                    ['id' => $data->teacherid, 'deleted' => 0],
+                    'id',
+                    MUST_EXIST
+                );
+            }
 
-        $data->coursegroupid = !empty($data->coursegroupid)
-                ? $this->get_mappingid('group', $data->coursegroupid, 0)
-                : 0;
+            $data->coursegroupid = (int) ($data->coursegroupid ?? 0);
+
+            if ($data->coursegroupid > 0) {
+                $DB->get_record(
+                    'groups',
+                    [
+                                'id' => $data->coursegroupid,
+                                'courseid' => $this->get_courseid(),
+                        ],
+                    'id',
+                    MUST_EXIST
+                );
+            }
+        } else {
+            $data->teacherid = $this->get_mappingid('user', $data->teacherid);
+
+            $data->coursegroupid = !empty($data->coursegroupid)
+                    ? $this->get_mappingid('group', $data->coursegroupid, 0)
+                    : 0;
+        }
 
         $newitemid = $DB->insert_record('scheduler_slots', $data);
         $this->set_mapping('scheduler_slot', $oldid, $newitemid, true);

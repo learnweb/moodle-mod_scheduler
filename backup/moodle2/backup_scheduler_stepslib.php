@@ -36,9 +36,35 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
      * @return backup_nested_element
      */
     protected function define_structure() {
+        global $DB;
 
         // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
+
+        $task = $this->get_task();
+
+        $backupinfo = $DB->get_record(
+            'backup_controllers',
+            ['backupid' => $task->get_backupid()],
+            'type, purpose, interactive',
+            MUST_EXIST
+        );
+
+        $isduplicate = $backupinfo->type === backup::TYPE_1ACTIVITY
+        && (int) $backupinfo->purpose === backup::MODE_IMPORT
+        && (bool) $backupinfo->interactive === backup::INTERACTIVE_NO;
+
+        $copyslots = false;
+        if ($isduplicate) {
+            $copyslots = (bool) $DB->get_field(
+                'scheduler',
+                'copyslotsonduplicate',
+                ['id' => $task->get_activityid()],
+                MUST_EXIST
+            );
+        }
+
+        $includeslots = $userinfo || $copyslots;
 
         // Define each element separated.
         $scheduler = new backup_nested_element('scheduler', ['id'], [
@@ -47,7 +73,7 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
             'scale', 'gradingstrategy', 'bookingrouping', 'bookingtype', 'usenotes',
             'usebookingform', 'bookinginstructions', 'bookinginstructionsformat',
             'usestudentnotes', 'requireupload', 'uploadmaxfiles', 'uploadmaxsize',
-            'usecaptcha', 'timemodified', 'groupcreation', ]);
+            'usecaptcha', 'timemodified', 'groupcreation', 'copyslotsonduplicate', ]);
 
         $slots = new backup_nested_element('slots');
 
@@ -75,18 +101,24 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         $scheduler->set_source_table('scheduler', ['id' => backup::VAR_ACTIVITYID]);
         $scheduler->annotate_ids('grouping', 'bookingrouping');
 
-        // Include appointments only if we back up user information.
-        if ($userinfo) {
+        // Include slots when backing up user data or explicitly copying slots.
+        if ($includeslots) {
             $slot->set_source_table('scheduler_slots', ['schedulerid' => backup::VAR_PARENTID]);
+        }
+
+        // Include bookings and personal appointment data only with user data.
+        if ($userinfo) {
             $appointment->set_source_table('scheduler_appointment', ['slotid' => backup::VAR_PARENTID]);
         }
 
         // Define id annotations.
         $scheduler->annotate_ids('scale', 'scale');
 
+        if ($includeslots) {
+            $slot->annotate_ids('group', 'coursegroupid');
+        }
         if ($userinfo) {
             $slot->annotate_ids('user', 'teacherid');
-            $slot->annotate_ids('group', 'coursegroupid');
             $appointment->annotate_ids('user', 'studentid');
             $appointment->annotate_ids('group', 'bookinggroupid');
         }
