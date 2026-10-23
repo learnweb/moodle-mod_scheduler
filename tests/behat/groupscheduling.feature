@@ -1,4 +1,4 @@
-@mod @mod_scheduler
+@mod @mod_scheduler @groupscheduling
 Feature: Entire groups can be booked into slots at once
   In order to allow booking of entire groups
   As a teacher
@@ -101,8 +101,8 @@ Feature: Entire groups can be booked into slots at once
     And I should see "2 students still need to make an appointment"
     And I should not see "Group A1" in the "groupstoschedule" "table"
     And I should see "Group A2" in the "groupstoschedule" "table"
-    And I should not see "Group B1" in the "groupstoschedule" "table"
-    And I should not see "Group B2" in the "groupstoschedule" "table"
+    And I should see "Group B1" in the "groupstoschedule" "table"
+    And I should see "Group B2" in the "groupstoschedule" "table"
 
   Scenario: Students can book their entire group into a slot
     Given I am logged in as edteacher1
@@ -132,6 +132,96 @@ Feature: Entire groups can be booked into slots at once
     And I should see "2 students still need to make an appointment"
     And I should not see "Group A1" in the "groupstoschedule" "table"
     And I should see "Group A2" in the "groupstoschedule" "table"
-    And I should not see "Group B1" in the "groupstoschedule" "table"
-    And I should not see "Group B2" in the "groupstoschedule" "table"
+    And I should see "Group B1" in the "groupstoschedule" "table"
+    And I should see "Group B2" in the "groupstoschedule" "table"
     And I log out
+
+  Scenario: Overlapping groups can book separate appointments
+    Given I am logged in as edteacher1
+    And I add a slot 5 days ahead at 800 in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I add a slot 5 days ahead at 900 in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    And I select "Group A1" from the "appointgroup" singleselect
+    And I click on "Book slot" "button" in the "8:00 AM" "table_row"
+    Then I should see "Large office" in the "8:00 AM" "table_row"
+
+    When I select "Group B1" from the "appointgroup" singleselect
+    Then "Book slot" "button" should exist in the "9:00 AM" "table_row"
+    When I click on "Book slot" "button" in the "9:00 AM" "table_row"
+    Then I should see "Large office" in the "9:00 AM" "table_row"
+    And I should see "Large office" in the "8:00 AM" "table_row"
+    And I should see "You cannot book further appointments in this scheduler."
+
+    When I select "Myself" from the "appointgroup" singleselect
+    Then I should see "You cannot book further appointments in this scheduler."
+    And "Book slot" "button" should not exist
+
+    When I select "Group A1" from the "appointgroup" singleselect
+    And I click on "Cancel booking" "button" in the "8:00 AM" "table_row"
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as edteacher1
+    Then I should see "Group A1" in the "groupstoschedule" "table"
+    And I should not see "Group B1" in the "groupstoschedule" "table"
+    And I should not see "Student 1" in the "8:00 AM" "table_row"
+    And I should not see "Student 2" in the "8:00 AM" "table_row"
+    And I should see "Student 1" in the "9:00 AM" "table_row"
+    And I should see "Student 3" in the "9:00 AM" "table_row"
+
+  Scenario: Group bookings turned off should should not show appoint group selection to students
+    Given I am logged in as edteacher1
+    And I am on the "schedulerNone" Activity page logged in as edteacher1
+    And I navigate to "Settings" in current page administration
+    And I set the following fields to these values:
+      | Booking in groups | No |
+    And I click on "Save and return to course" "button"
+    And I add 8 slots 5 days ahead in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    Then "select[name='appointgroup']" "css_element" should not exist
+    And "Book slot" "button" should exist
+
+  Scenario: Group bookings allowed and allowed booking type is "individual and group bookings" should show "Myself" and group selection to students
+    Given I am logged in as edteacher1
+    And I am on the "schedulerNone" Activity page logged in as edteacher1
+    And I navigate to "Settings" in current page administration
+    And I set the following fields to these values:
+      | Booking in groups    | Yes, for all groups           |
+      | Allowed booking type | Individual and group bookings |
+    And I click on "Save and return to course" "button"
+    And I add 8 slots 5 days ahead in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    Then the "appointgroup" select box should contain "Myself"
+    And the "appointgroup" select box should contain "Group A1"
+    And the "appointgroup" select box should contain "Group B1"
+
+  Scenario: Group bookings allowed and allowed booking type is "group bookings only" should show group selection to students but not "Myself"
+    Given I am logged in as edteacher1
+    And I am on the "schedulerNone" Activity page logged in as edteacher1
+    And I navigate to "Settings" in current page administration
+    And I set the following fields to these values:
+      | Booking in groups    | Yes, for all groups           |
+      | Allowed booking type | Group bookings only           |
+    And I click on "Save and return to course" "button"
+    And I add 8 slots 5 days ahead in "schedulerNone" scheduler and I fill the form with:
+      | Location    | Large office |
+      | exclusivity | 5            |
+    And I log out
+
+    When I am on the "schedulerNone" Activity page logged in as student1
+    Then the "appointgroup" select box should not contain "Myself"
+    And the "appointgroup" select box should contain "Group A1"
+    And the "appointgroup" select box should contain "Group B1"
