@@ -484,16 +484,24 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
 
         upgrade_mod_savepoint(true, 2026101603, 'scheduler');
     }
-    return true;
 
-    if ($oldversion < 2026102200) {
+    if ($oldversion < 2026102300) {
         $table = new xmldb_table('scheduler');
-        $field = new xmldb_field('copyslotsonduplicate', XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 0, 'defaultslotduration');
+        $field = new xmldb_field(
+                'copyslotsonduplicate',
+                XMLDB_TYPE_INTEGER,
+                1,
+                null,
+                XMLDB_NOTNULL,
+                null,
+                0,
+                'defaultslotduration'
+        );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2026102200, 'scheduler');
+        upgrade_mod_savepoint(true, 2026102300, 'scheduler');
     }
     return true;
 }
