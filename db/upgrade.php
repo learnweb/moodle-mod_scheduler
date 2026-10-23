@@ -488,14 +488,14 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
     if ($oldversion < 2026102300) {
         $table = new xmldb_table('scheduler');
         $field = new xmldb_field(
-                'copyslotsonduplicate',
-                XMLDB_TYPE_INTEGER,
-                1,
-                null,
-                XMLDB_NOTNULL,
-                null,
-                0,
-                'defaultslotduration'
+            'copyslotsonduplicate',
+            XMLDB_TYPE_INTEGER,
+            1,
+            null,
+            XMLDB_NOTNULL,
+            null,
+            0,
+            'defaultslotduration'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);

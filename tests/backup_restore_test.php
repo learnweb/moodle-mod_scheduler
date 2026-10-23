@@ -36,6 +36,16 @@ final class backup_restore_test extends \advanced_testcase {
         require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
     }
 
+    /**
+     * Tests that duplication preserves slot details, teacher assignments and group
+     * restrictions without copying bookings or modifying the original activity.
+     *
+     * @return void
+     * @throws \coding_exception
+     * @throws \core\exception\coding_exception
+     * @throws \core\exception\moodle_exception
+     * @throws \dml_exception
+     */
     public function test_duplicate_with_copying_slots(): void {
         global $DB;
 
