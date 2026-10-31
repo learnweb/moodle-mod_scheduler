@@ -395,6 +395,15 @@ class mod_scheduler_renderer extends plugin_renderer_base
                         $this->teacherview_tab($baseurl, 'groupbreakdown', 'viewstatistics', 'groupbreakdown'),
         ];
 
+        $statisticstabs = $statstab->subtree;
+        $statisticsids = array_map(function ($tab) {
+            return $tab->id;
+        }, $statisticstabs);
+
+        if (in_array($selected, $statisticsids, true)) {
+            return $this->tabtree($statisticstabs, $selected, $inactive);
+        }
+
         $level1 = [];
         $level1[] = $this->teacherview_tab($baseurl, 'myappointments', 'view', 'myappointments');
         if ($permissions->can_see_all_slots()) {
@@ -402,8 +411,6 @@ class mod_scheduler_renderer extends plugin_renderer_base
         }
 
         $level1[] = $this->teacherview_tab($baseurl, 'datelist', 'datelist');
-        $level1[] = $statstab;
-        $level1[] = $this->teacherview_tab($baseurl, 'export', 'export');
 
         return $this->tabtree($level1, $selected, $inactive);
     }
