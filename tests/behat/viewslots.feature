@@ -14,7 +14,7 @@ Feature: Students viewing slots available for booking
       | student3 | Student     | 3        | student3@example.com |
     And the following "courses" exist:
       | fullname | shortname | category |
-      | Course 1 | C1 | 0 |
+      | Course 1 | C1        | 0        |
     And the following "course enrolments" exist:
       | user  | course | role           |
       | teacher1  | C1 | editingteacher |
@@ -147,4 +147,34 @@ Feature: Students viewing slots available for booking
     And I should not see "7:00 AM" in the "slotbookertable" "table"
     And I should not see "8:00 AM" in the "slotbookertable" "table"
 
+    And I log out
+
+  Scenario: Book slot button appears for student only when meeting was booked
+    Given I am on the "scheduler1" Activity page logged in as teacher1
+    And I click on "Add slots" "link"
+    And I follow "Add single slot"
+    And I set the following fields to these values:
+      | starttime[day]   | 1                                |
+      | starttime[month] | April                            |
+      | starttime[year]  | 2050                             |
+      | duration         | 30                               |
+      | Location         | Online test meeting              |
+      | Meeting link     | https://example.com/test-meeting |
+    When I click on "Save changes" "button"
+    Then I should see "1 slot added"
+    And "Join online meeting" "link" should exist
+    And I log out
+
+    When I am on the "scheduler1" Activity page logged in as "student1"
+    Then I should see "Online test meeting"
+    And "Join online meeting" "link" should not exist
+
+    When I click on "Book slot" "button" in the "Online test meeting" "table_row"
+    Then "Cancel booking" "button" should exist
+    And "Join online meeting" "link" should exist
+    And "a[href='https://example.com/test-meeting']" "css_element" should exist
+
+    When I click on "Cancel booking" "button"
+    Then "Book slot" "button" should exist in the "Online test meeting" "table_row"
+    And "Join online meeting" "link" should not exist
     And I log out

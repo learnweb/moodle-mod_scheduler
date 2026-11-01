@@ -797,3 +797,57 @@ function mod_scheduler_get_fontawesome_icon_map() {
         'mod_scheduler:t/no' => 'fa-thumbs-down',
     ];
 }
+
+/**
+ * Adds the statistics and export tab to the 'More' menu tab.
+ *
+ * @param settings_navigation $settings
+ * @param navigation_node $schedulernode
+ * @return void
+ * @throws \core\exception\moodle_exception
+ * @throws coding_exception
+ */
+function scheduler_extend_settings_navigation(
+    settings_navigation $settings,
+    navigation_node $schedulernode,
+): void {
+    // Check capabilities.
+    $cm = $settings->get_page()->cm;
+    $context = context_module::instance($cm->id);
+
+    $teachercapabilities = [
+        'mod/scheduler:manage',
+        'mod/scheduler:manageallappointments',
+        'mod/scheduler:canseeotherteachersbooking',
+    ];
+
+    if (!has_any_capability($teachercapabilities, $context)) {
+        return;
+    }
+
+    // Add tabs to more menu.
+    $statisticsnode = $schedulernode->add(
+        get_string('statistics', 'scheduler'),
+        new moodle_url('/mod/scheduler/view.php', [
+                    'id' => $cm->id,
+                    'what' => 'viewstatistics',
+                    'subpage' => 'overall',
+            ]),
+        navigation_node::TYPE_CUSTOM,
+        null,
+        'schedulerstatistics'
+    );
+    $statisticsnode->set_force_into_more_menu(true);
+
+    $exportnode = $schedulernode->add(
+        get_string('export', 'scheduler'),
+        new moodle_url('/mod/scheduler/view.php', [
+                    'id' => $cm->id,
+                    'what' => 'export',
+            ]),
+        navigation_node::TYPE_CUSTOM,
+        null,
+        'schedulerexport'
+    );
+    $exportnode->set_force_into_more_menu(true);
+}
