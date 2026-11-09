@@ -492,9 +492,9 @@ class scheduler_editslot_form extends scheduler_slotform_base
             $data->studentid[$i] = $appointment->studentid;
 
             // Display the student of an existing appointment as read-only.
-            $group = $this->_form->getElement('studgroup[' . $i .']');
+            $group = $this->_form->getElement('studgroup[' . $i . ']');
             foreach ($group->getElements() as $element) {
-                if ($element->getName() == 'studentid[' . $i .']') {
+                if ($element->getName() == 'studentid[' . $i . ']') {
                     $element->freeze();
                 }
             }
