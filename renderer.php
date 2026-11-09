@@ -301,7 +301,7 @@ class mod_scheduler_renderer extends plugin_renderer_base
                         'appointmentid' => $appointmentid,
         ];
         $url = new moodle_url('/mod/scheduler/view.php', $paras);
-        return html_writer::link($url, fullname($user));
+        return html_writer::link($url, fullname($user), ['class' => 'align-middle']);
     }
 
     /**
@@ -395,6 +395,15 @@ class mod_scheduler_renderer extends plugin_renderer_base
                         $this->teacherview_tab($baseurl, 'groupbreakdown', 'viewstatistics', 'groupbreakdown'),
         ];
 
+        $statisticstabs = $statstab->subtree;
+        $statisticsids = array_map(function ($tab) {
+            return $tab->id;
+        }, $statisticstabs);
+
+        if (in_array($selected, $statisticsids, true)) {
+            return $this->tabtree($statisticstabs, $selected, $inactive);
+        }
+
         $level1 = [];
         $level1[] = $this->teacherview_tab($baseurl, 'myappointments', 'view', 'myappointments');
         if ($permissions->can_see_all_slots()) {
@@ -402,8 +411,6 @@ class mod_scheduler_renderer extends plugin_renderer_base
         }
 
         $level1[] = $this->teacherview_tab($baseurl, 'datelist', 'datelist');
-        $level1[] = $statstab;
-        $level1[] = $this->teacherview_tab($baseurl, 'export', 'export');
 
         return $this->tabtree($level1, $selected, $inactive);
     }
@@ -416,6 +423,7 @@ class mod_scheduler_renderer extends plugin_renderer_base
      */
     public function render_scheduler_slot_table(scheduler_slot_table $slottable) {
         $table = new html_table();
+        $table->attributes['class'] = 'table generaltable table-reboot table-hover table-striped';
 
         if ($slottable->showslot) {
             $table->head  = [get_string('date', 'scheduler')];
@@ -501,7 +509,22 @@ class mod_scheduler_renderer extends plugin_renderer_base
             }
 
             if ($slottable->showslot && $slottable->showlocation) {
-                $rowdata[] = format_string($slot->location);
+                $location = format_string($slot->location);
+                if (!empty($slot->meetingurl)) {
+                    $location .= html_writer::div(
+                        html_writer::link(
+                            new moodle_url($slot->meetingurl),
+                            get_string('joinmeeting', 'scheduler'),
+                            [
+                                'class' => 'btn btn-secondary',
+                                'target' => '_blank',
+                                'rel' => 'noopener noreferrer',
+                            ]
+                        ),
+                        'mt-2'
+                    );
+                }
+                $rowdata[] = $location;
             }
 
             $notes = '';
@@ -610,7 +633,7 @@ class mod_scheduler_renderer extends plugin_renderer_base
                             $student->entryid,
                             $student->checked,
                             '',
-                            ['class' => 'studentselect']
+                            ['class' => 'studentselect form-check-input align-middle mt-0']
                         );
                     } else {
                         $img = $student->checked ? 'ticked' : 'unticked';
@@ -645,13 +668,16 @@ class mod_scheduler_renderer extends plugin_renderer_base
                     $class .= ' highlight';
                 }
 
-                $picture = $this->user_picture($student->user, ['courseid' => $studentlist->scheduler->courseid]);
+                $picture = $this->user_picture(
+                    $student->user,
+                    ['courseid' => $studentlist->scheduler->courseid, 'class' => 'userpicture ms-1']
+                );
                 $grade = '';
                 if ($studentlist->showgrades && $student->grade) {
                     $grade = $this->format_grade($studentlist->scheduler, $student->grade, true);
                 }
 
-                $o .= html_writer::div($checkbox . $picture . ' ' . $name . $studicons . ' ' . $grade, $class);
+                $o .= html_writer::div($checkbox . $picture . $name . $studicons . ' ' . $grade, $class);
             }
 
             if ($editable) {
@@ -678,6 +704,7 @@ class mod_scheduler_renderer extends plugin_renderer_base
     public function render_scheduler_slot_booker(scheduler_slot_booker $booker) {
 
         $table = new html_table();
+        $table->attributes['class'] = 'table generaltable table-reboot table-hover table-striped';
         $table->head  = [ get_string('date', 'scheduler'), get_string('start', 'scheduler'),
                         get_string('end', 'scheduler'), get_string('location', 'scheduler'),
                         get_string('comments', 'scheduler'), s($booker->scheduler->get_teacher_name()),
@@ -719,7 +746,22 @@ class mod_scheduler_renderer extends plugin_renderer_base
             $rowdata[] = $starttimestr;
             $rowdata[] = $endtimestr;
 
-            $rowdata[] = format_string($slot->location);
+            $location = format_string($slot->location);
+            if (!empty($slot->meetingurl)) {
+                $location .= html_writer::div(
+                    html_writer::link(
+                        new moodle_url($slot->meetingurl),
+                        get_string('joinmeeting', 'scheduler'),
+                        [
+                                        'class' => 'btn btn-secondary',
+                                        'target' => '_blank',
+                                        'rel' => 'noopener noreferrer',
+                                ]
+                    ),
+                    'mt-2'
+                );
+            }
+            $rowdata[] = $location;
 
             $rowdata[] = $this->format_notes(
                 $slot->notes,
@@ -834,6 +876,7 @@ class mod_scheduler_renderer extends plugin_renderer_base
         $table->align[] = 'center';
 
         $table->id = 'slotmanager';
+        $table->attributes['class'] = 'table generaltable table-reboot table-hover table-striped';
         $table->data = [];
 
         $previousdate = '';
@@ -843,7 +886,13 @@ class mod_scheduler_renderer extends plugin_renderer_base
         foreach ($slotman->slots as $slot) {
             $rowdata = [];
 
-            $selectbox = html_writer::checkbox('selectedslot[]', $slot->slotid, false, '', ['class' => 'slotselect']);
+            $selectbox = html_writer::checkbox(
+                'selectedslot[]',
+                $slot->slotid,
+                false,
+                '',
+                ['class' => 'slotselect form-check-input mt-0']
+            );
             $rowdata[] = $slot->editable ? $selectbox : '';
 
             $startdate = $this->userdate($slot->starttime);
@@ -871,7 +920,22 @@ class mod_scheduler_renderer extends plugin_renderer_base
             $rowdata[] = $starttimestr;
             $rowdata[] = $endtimestr;
 
-            $rowdata[] = format_string($slot->location);
+            $location = format_string($slot->location);
+            if (!empty($slot->meetingurl)) {
+                $location .= html_writer::div(
+                    html_writer::link(
+                        new moodle_url($slot->meetingurl),
+                        get_string('joinmeeting', 'scheduler'),
+                        [
+                                        'class' => 'btn btn-secondary',
+                                        'target' => '_blank',
+                                        'rel' => 'noopener noreferrer',
+                                ]
+                    ),
+                    'mt-2'
+                );
+            }
+            $rowdata[] = $location;
 
             $rowdata[] = $this->render($slot->students);
 
@@ -963,6 +1027,7 @@ class mod_scheduler_renderer extends plugin_renderer_base
     public function render_scheduler_scheduling_list(scheduler_scheduling_list $list) {
 
         $mtable = new html_table();
+        $mtable->attributes['class'] = 'table generaltable table-reboot table-hover table-striped';
 
         $mtable->id = $list->id;
         $mtable->head = ['', get_string('name')];
@@ -1108,6 +1173,24 @@ class mod_scheduler_renderer extends plugin_renderer_base
                 $row = new html_table_row();
                 $cell1 = new html_table_cell(get_string('location', 'scheduler'));
                 $cell2 = new html_table_cell(format_string($ai->slot->appointmentlocation));
+                $row->cells = [$cell1, $cell2];
+                $t->data[] = $row;
+            }
+
+            global $USER;
+            $canjoinmeeting = !$ai->onstudentside || $ai->slot->is_booked_by_student($USER->id);
+            if ($canjoinmeeting && !empty($ai->slot->meetingurl)) {
+                $row = new html_table_row();
+                $cell1 = new html_table_cell(get_string('meetingurl', 'scheduler'));
+                $cell2 = new html_table_cell(html_writer::link(
+                    new moodle_url($ai->slot->meetingurl),
+                    get_string('joinmeeting', 'scheduler'),
+                    [
+                        'class' => 'btn btn-secondary',
+                        'target' => '_blank',
+                        'rel' => 'noopener noreferrer',
+                    ]
+                ));
                 $row->cells = [$cell1, $cell2];
                 $t->data[] = $row;
             }

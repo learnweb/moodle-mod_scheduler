@@ -76,7 +76,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
 
   Scenario: Editing teachers can see all slots and all groups
     When I am on the "schedulerNone" Activity page logged in as "edteacher1"
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "All appointments"
     Then I should see "Editingteacher 1" in the "slotmanager" "table"
     And I should see "Nonedteacher 1" in the "slotmanager" "table"
@@ -86,7 +86,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     And I should see "Student 6" in the "studentstoschedule" "table"
 
     When I am on the "schedulerVis" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "All appointments"
     Then I should see "Visible groups"
     And the "Visible groups" select box should contain "All participants"
@@ -108,7 +108,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     And I should see "Nonedteacher 1" in the "slotmanager" "table"
 
     When I am on the "schedulerSep" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "All appointments"
     Then I should see "Separate groups"
     And the "Separate groups" select box should contain "All participants"
@@ -145,7 +145,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     # i.e., groups A and B.
     # Students outside any group should not be visible.
     When I am on the "schedulerSep" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "Group mode: Separate groups"
     And I should see "Only students in Group A, Group B can book"
@@ -158,7 +158,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
   Scenario: Nonediting teachers can see groups only if allowed by the group mode
 
     When I am on the "schedulerNone" Activity page logged in as neteacher1
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "6 students still need to make an appointment"
     When I follow "All appointments"
@@ -166,7 +166,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     And I should see "Nonedteacher 1" in the "slotmanager" "table"
 
     When I am on the "schedulerVis" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "2 students still need to make an appointment"
     When I follow "All appointments"
@@ -190,7 +190,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     And I should see "Nonedteacher 1" in the "slotmanager" "table"
 
     When I am on the "schedulerSep" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "2 students still need to make an appointment"
     When I follow "All appointments"
@@ -218,7 +218,7 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     # i.e., group B (and C).
     # Students in group 1 and outside any group should not be visible.
     When I am on the "schedulerSep" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "Group mode: Separate groups"
     And I should see "Only students in Group B, Group C can book"
@@ -233,19 +233,19 @@ Feature: Users can only see their own groups if the scheduler is in group mode
     # neteacher2 sees no students for scheduling in group mode, since he's not member of a group
 
     When I am on the "schedulerNone" Activity page logged in as neteacher2
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "6 students still need to make an appointment"
 
     When I am on the "schedulerVis" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "No students available for scheduling"
     And I should see "Group mode: Visible groups"
     And I should see "students cannot book appointments with you"
 
     When I am on the "schedulerSep" Activity page
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "No students available for scheduling"
     And I should see "Group mode: Separate groups"

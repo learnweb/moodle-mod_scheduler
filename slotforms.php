@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_scheduler\course_group_helper;
 use mod_scheduler\model\scheduler;
 use mod_scheduler\model\slot;
 
@@ -114,6 +115,11 @@ abstract class scheduler_slotform_base extends moodleform
         $mform->setDefault('appointmentlocation', $this->scheduler->get_last_location($USER));
         $mform->addHelpButton('appointmentlocation', 'location', 'scheduler');
 
+        // Optional meeting link.
+        $mform->addElement('text', 'meetingurl', get_string('meetingurl', 'scheduler'), ['size' => '60']);
+        $mform->setType('meetingurl', PARAM_RAW_TRIMMED);
+        $mform->addHelpButton('meetingurl', 'meetingurl', 'scheduler');
+
         // Choose the teacher (if allowed).
         if (has_capability('mod/scheduler:canscheduletootherteachers', $this->scheduler->get_context())) {
             $teachername = s($this->scheduler->get_teacher_name());
@@ -176,6 +182,18 @@ abstract class scheduler_slotform_base extends moodleform
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+        $meetingurl = $data['meetingurl'] ?? '';
+
+        if ($meetingurl != '') {
+            if (\core_text::strlen($meetingurl) > 2048) {
+                $errors['meetingurl'] = get_string('meetingurltoolong', 'scheduler');
+            } else if (
+                !preg_match('~^https?://~i', $meetingurl) ||
+                clean_param($meetingurl, PARAM_URL) !== $meetingurl
+            ) {
+                $errors['meetingurl'] = get_string('invalidmeetingurl', 'scheduler');
+            }
+        }
 
         // Check duration for valid range.
         if ($this->hasduration) {
@@ -259,6 +277,10 @@ class scheduler_editslot_form extends scheduler_slotform_base
             $this->noteoptions
         );
         $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
+
+        // Group ID.
+        $mform->addElement('hidden', 'bookinggroupid', 0);
+        $mform->setType('bookinggroupid', PARAM_INT);
 
         // Appointments.
 
@@ -359,10 +381,20 @@ class scheduler_editslot_form extends scheduler_slotform_base
 
         $errors = parent::validation($data, $files);
 
+        // Disabled autocomplete fields can export a one-element array.
+        $studentids = [];
+        for ($i = 0; $i < $data['appointment_repeats']; $i++) {
+            $studentid = $data['studentid'][$i] ?? 0;
+            if (is_array($studentid)) {
+                $studentid = reset($studentid);
+            }
+            $studentids[$i] = (int)$studentid;
+        }
+
         // Check number of appointments vs exclusivity.
         $numappointments = 0;
         for ($i = 0; $i < $data['appointment_repeats']; $i++) {
-            if ($data['studentid'][$i] > 0 && $data['deletestudent'][$i] == 0) {
+            if ($studentids[$i] > 0 && empty($data['deletestudent'][$i])) {
                 $numappointments++;
             }
         }
@@ -379,15 +411,22 @@ class scheduler_editslot_form extends scheduler_slotform_base
         }
 
         // Check whether students have been selected several times.
+        $selectedstudents = [];
         for ($i = 0; $i < $data['appointment_repeats']; $i++) {
-            for ($j = 0; $j < $i; $j++) {
-                if (
-                    $data['deletestudent'][$j] == 0 && $data['studentid'][$i] > 0
-                    && $data['studentid'][$i] == $data['studentid'][$j]
-                ) {
-                    $errors['studgroup[' . $i . ']'] = get_string('studentmultiselect', 'scheduler');
-                    $errors['studgroup[' . $j . ']'] = get_string('studentmultiselect', 'scheduler');
-                }
+            $studentid = $studentids[$i];
+
+            // Ignore empty appointments and appointments being deleted.
+            if ($studentid <= 0 || !empty($data['deletestudent'][$i])) {
+                continue;
+            }
+
+            if (isset($selectedstudents[$studentid])) {
+                $j = $selectedstudents[$studentid];
+                $message = get_string('studentmultiselect', 'scheduler');
+                $errors['studgroup[' . $i . ']'] = $message;
+                $errors['studgroup[' . $j . ']'] = $message;
+            } else {
+                $selectedstudents[$studentid] = $i;
             }
         }
 
@@ -451,6 +490,15 @@ class scheduler_editslot_form extends scheduler_slotform_base
         foreach ($slot->get_appointments() as $appointment) {
             $data->appointid[$i] = $appointment->id;
             $data->studentid[$i] = $appointment->studentid;
+
+            // Display the student of an existing appointment as read-only.
+            $group = $this->_form->getElement('studgroup[' . $i . ']');
+            foreach ($group->getElements() as $element) {
+                if ($element->getName() == 'studentid[' . $i . ']') {
+                    $element->freeze();
+                }
+            }
+
             $data->attended[$i] = $appointment->attended;
 
             $draftid = file_get_submitted_draft_itemid('appointmentnote');
@@ -510,6 +558,7 @@ class scheduler_editslot_form extends scheduler_slotform_base
         $slot->exclusivity = $data->exclusivityenable ? $data->exclusivity : 0;
         $slot->teacherid = $data->teacherid;
         $slot->appointmentlocation = $data->appointmentlocation;
+        $slot->meetingurl = $data->meetingurl;
         $slot->hideuntil = $data->hideuntil;
         $slot->emaildate = $data->emaildate;
         $slot->timemodified = time();
@@ -531,10 +580,12 @@ class scheduler_editslot_form extends scheduler_slotform_base
         $slot->notesformat = $editor['format'];
 
         $currentapps = $slot->get_appointments();
+        $removedappointments = [];
         for ($i = 0; $i < $data->appointment_repeats; $i++) {
             if ($data->deletestudent[$i] != 0) {
                 if ($data->appointid[$i]) {
                     $app = $slot->get_appointment($data->appointid[$i]);
+                    $removedappointments[] = $app->get_data();
                     $slot->remove_appointment($app);
                 }
             } else if ($data->studentid[$i] > 0) {
@@ -544,6 +595,7 @@ class scheduler_editslot_form extends scheduler_slotform_base
                 } else {
                     $app = $slot->create_appointment();
                     $app->studentid = $data->studentid[$i];
+                    $app->bookinggroupid = $data->bookinggroupid ?? 0;
                     $app->timecreated = time();
                     $app->save();
                 }
@@ -586,6 +638,14 @@ class scheduler_editslot_form extends scheduler_slotform_base
         }
 
         $slot->save();
+
+        // Remove students for canceled appointments.
+        foreach ($removedappointments as $appointment) {
+            course_group_helper::remove_booked_students($slot, $appointment);
+        }
+
+        // Ensure all currently booked students belong to the course group.
+        course_group_helper::add_booked_students($slot);
 
         $slot = $this->scheduler->get_slot($slot->id);
 
@@ -714,6 +774,16 @@ class scheduler_addsession_form extends scheduler_slotform_base {
 
         $mform->addElement('select', 'emaildaterel', get_string('emailreminder', 'scheduler'), $remindersel);
         $mform->setDefault('remindersel', -1);
+
+        // Slot comments.
+        $mform->addElement(
+            'editor',
+            'notes_editor',
+            get_string('comments', 'scheduler'),
+            ['rows' => 3, 'columns' => 60],
+            $this->noteoptions
+        );
+        $mform->setType('notes', PARAM_RAW); // Must be PARAM_RAW for rich text editor content.
 
         $this->add_action_buttons();
     }
