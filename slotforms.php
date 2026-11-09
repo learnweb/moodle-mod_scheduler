@@ -381,10 +381,20 @@ class scheduler_editslot_form extends scheduler_slotform_base
 
         $errors = parent::validation($data, $files);
 
+        // Disabled autocomplete fields can export a one-element array.
+        $studentids = [];
+        for ($i = 0; $i < $data['appointment_repeats']; $i++) {
+            $studentid = $data['studentid'][$i] ?? 0;
+            if (is_array($studentid)) {
+                $studentid = reset($studentid);
+            }
+            $studentids[$i] = (int)$studentid;
+        }
+
         // Check number of appointments vs exclusivity.
         $numappointments = 0;
         for ($i = 0; $i < $data['appointment_repeats']; $i++) {
-            if ($data['studentid'][$i] > 0 && $data['deletestudent'][$i] == 0) {
+            if ($studentids[$i] > 0 && empty($data['deletestudent'][$i])) {
                 $numappointments++;
             }
         }
@@ -401,15 +411,22 @@ class scheduler_editslot_form extends scheduler_slotform_base
         }
 
         // Check whether students have been selected several times.
+        $selectedstudents = [];
         for ($i = 0; $i < $data['appointment_repeats']; $i++) {
-            for ($j = 0; $j < $i; $j++) {
-                if (
-                    $data['deletestudent'][$j] == 0 && $data['studentid'][$i] > 0
-                    && $data['studentid'][$i] == $data['studentid'][$j]
-                ) {
-                    $errors['studgroup[' . $i . ']'] = get_string('studentmultiselect', 'scheduler');
-                    $errors['studgroup[' . $j . ']'] = get_string('studentmultiselect', 'scheduler');
-                }
+            $studentid = $studentids[$i];
+
+            // Ignore empty appointments and appointments being deleted.
+            if ($studentid <= 0 || !empty($data['deletestudent'][$i])) {
+                continue;
+            }
+
+            if (isset($selectedstudents[$studentid])) {
+                $j = $selectedstudents[$studentid];
+                $message = get_string('studentmultiselect', 'scheduler');
+                $errors['studgroup[' . $i . ']'] = $message;
+                $errors['studgroup[' . $j . ']'] = $message;
+            } else {
+                $selectedstudents[$studentid] = $i;
             }
         }
 
@@ -473,6 +490,15 @@ class scheduler_editslot_form extends scheduler_slotform_base
         foreach ($slot->get_appointments() as $appointment) {
             $data->appointid[$i] = $appointment->id;
             $data->studentid[$i] = $appointment->studentid;
+
+            // Display the student of an existing appointment as read-only.
+            $group = $this->_form->getElement('studgroup[' . $i .']');
+            foreach ($group->getElements() as $element) {
+                if ($element->getName() == 'studentid[' . $i .']') {
+                    $element->freeze();
+                }
+            }
+
             $data->attended[$i] = $appointment->attended;
 
             $draftid = file_get_submitted_draft_itemid('appointmentnote');
