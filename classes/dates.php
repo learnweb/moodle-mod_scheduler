@@ -43,18 +43,22 @@ class dates extends activity_dates {
      */
     protected function get_dates(): array {
         $scheduler = \mod_scheduler\model\scheduler::load_by_id($this->cm->instance);
+
+        $bookingstart = $scheduler->bookingstart;
+        $bookingend = $scheduler->bookingend;
+
         $dates = [];
-        if (!empty($scheduler->bookingstart)) {
-            $dates[] = (object) [
+        if (!empty($bookingstart)) {
+            $dates[] = [
                     'label' => get_string('activitydate:bookingstart', 'scheduler'),
-                    'timestamp' => $scheduler->bookingstart,
+                    'timestamp' => $bookingstart,
             ];
         }
 
-        if (!empty($scheduler->bookingend)) {
-            $dates[] = (object) [
+        if (!empty($bookingend)) {
+            $dates[] = [
                     'label' => get_string('activitydate:bookingend', 'scheduler'),
-                    'timestamp' => $scheduler->bookingend,
+                    'timestamp' => $bookingend,
             ];
         }
         return $dates;

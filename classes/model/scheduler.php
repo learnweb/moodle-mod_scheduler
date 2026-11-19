@@ -479,7 +479,8 @@ class scheduler extends mvc_record_model
             $finalgrades[$grade->studentid]->userid = $grade->studentid;
         }
 
-        if ($this->scale > 0) { // Grading numerically.
+        if ($this->scale > 0) {
+            // Grading numerically.
             foreach ($grades as $grade) {
                 $gradesums[$grade->studentid]->sum = @$gradesums[$grade->studentid]->sum + $grade->grade;
                 $gradesums[$grade->studentid]->count = @$gradesums[$grade->studentid]->count + 1;
@@ -498,7 +499,8 @@ class scheduler extends mvc_record_model
                         break;
                 }
             }
-        } else { // Grading on scales.
+        } else {
+            // Grading on scales.
             $scaleid = - ($this->scale);
             $maxgrade = '';
             if ($scale = $DB->get_record('scale', ['id' => $scaleid])) {

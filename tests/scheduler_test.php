@@ -415,6 +415,45 @@ final class scheduler_test extends \advanced_testcase
     }
 
     /**
+     * Tests that configured booking dates are returned for display.
+     *
+     * @param int $bookingstart
+     * @param int $bookingend
+     * @param array $expected
+     * @return void
+     * @throws \coding_exception
+     * @throws \core\exception\coding_exception
+     * @throws \dml_exception
+     * @dataProvider booking_dates_provider
+     * @covers \mod_scheduler\dates::get_dates
+     */
+    public function test_booking_dates(
+        int $bookingstart,
+        int $bookingend,
+        array $expected
+    ): void {
+        global $DB, $USER;
+
+        $this->setAdminUser();
+        $DB->update_record('scheduler', (object) [
+                'id' => $this->schedulerid,
+                'bookingstart' => $bookingstart,
+                'bookingend' => $bookingend,
+        ]);
+
+        $cm = \cm_info::create(
+            get_coursemodule_from_id('scheduler', $this->moduleid)
+        );
+
+        $dates = \core\activity_dates::get_dates_for_module(
+            $cm,
+            (int) $USER->id
+        );
+
+        $this->assertEquals($expected, $dates);
+    }
+
+    /**
      * Assert the number of appointments for a student with certain properties.
      *
      * @param int $expectedwithchangeables expected number of bookable appointments, including changeable ones
@@ -613,5 +652,41 @@ final class scheduler_test extends \advanced_testcase
         $this->assertTrue($scheduler->has_booking_started());
         $this->assertTrue($scheduler->has_booking_ended());
         $this->assertFalse($scheduler->is_booking_open());
+    }
+
+    /**
+     * Provides booking dates and their expected display values.
+     *
+     * @return array
+     */
+    public static function booking_dates_provider(): array {
+        $start = 1800000000;
+        $end = 1800086400;
+
+        return [
+                'no dates configured' => [0, 0, []],
+                'only booking start' => [
+                        $start,
+                        0,
+                        [
+                                ['label' => 'Booking opens', 'timestamp' => $start],
+                        ],
+                ],
+                'only booking end' => [
+                        0,
+                        $end,
+                        [
+                                ['label' => 'Booking closes', 'timestamp' => $end],
+                        ],
+                ],
+                'both dates configured' => [
+                        $start,
+                        $end,
+                        [
+                                ['label' => 'Booking opens', 'timestamp' => $start],
+                                ['label' => 'Booking closes', 'timestamp' => $end],
+                        ],
+                ],
+        ];
     }
 }

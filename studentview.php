@@ -236,7 +236,8 @@ if (!$canseefull && $bookablecnt == 0) {
         } else {
             if ($remaining > 0) {
                 $groupinfo = get_string('limited', 'scheduler', $remaining . '/' . $slot->exclusivity);
-            } else { // Group info should not be visible to students.
+            } else {
+                // Group info should not be visible to students.
                 $groupinfo = get_string('complete', 'scheduler');
                 $canbookthisslot = false;
             }
