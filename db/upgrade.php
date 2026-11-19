@@ -441,6 +441,8 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
             $dbman->add_field($table, $field);
         }
 
+        $DB->set_field('scheduler_appointment', 'bookinggroupid', -1);
+
         upgrade_mod_savepoint(true, 2026092200, 'scheduler');
     }
     return true;

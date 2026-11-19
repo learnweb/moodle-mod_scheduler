@@ -131,8 +131,18 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
 
         $data->studentid = $this->get_mappingid('user', $data->studentid);
 
-        $data->bookinggroupid = !empty($data->bookinggroupid)
-            ? $this->get_mappingid('group', $data->bookinggroupid, 0) : 0;
+        // Backups made before group tracking do not contain this field.
+        $bookinggroupid = (int) ($data->bookinggroupid ?? -1);
+        if ($bookinggroupid > 0) {
+            $data->bookinggroupid = $this->get_mappingid(
+                    'group',
+                    $bookinggroupid,
+                    0
+            );
+        } else {
+            // Preserve individual bookings and bookings with an unknown group.
+            $data->bookinggroupid = $bookinggroupid;
+        }
 
         $newitemid = $DB->insert_record('scheduler_appointment', $data);
         $this->set_mapping('scheduler_appointment', $oldid, $newitemid, true);

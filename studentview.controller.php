@@ -308,14 +308,25 @@ if ($action == 'cancelbooking') {
     $appointmentstocancel = [];
 
     if ($appointgroup > 0) {
+        $groupmembers = $scheduler->get_available_students($appointgroup);
+
         foreach ($slot->get_appointments() as $appointment) {
-            if ((int) $appointment->bookinggroupid === $appointgroup) {
+            $bookinggroupid = (int) $appointment->bookinggroupid;
+
+            $islegacygroupbooking = $bookinggroupid === -1
+                    && isset($groupmembers[$appointment->studentid]);
+
+            if ($bookinggroupid === (int) $appointgroup || $islegacygroupbooking) {
                 $appointmentstocancel[] = $appointment;
             }
         }
     } else {
         $appointment = $slot->get_student_appointment($USER->id);
-        if ($appointment && (int) $appointment->bookinggroupid === 0) {
+
+        if (
+                $appointment
+                && in_array((int) $appointment->bookinggroupid, [-1, 0], true)
+        ) {
             $appointmentstocancel[] = $appointment;
         }
     }

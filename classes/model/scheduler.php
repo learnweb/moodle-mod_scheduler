@@ -823,12 +823,28 @@ class scheduler extends mvc_record_model
         }
 
         $sql = "SELECT COUNT(*)
-                  FROM {scheduler_slots} s
-                  JOIN {scheduler_appointment} a ON a.slotid = s.id
-                 WHERE s.schedulerid = :schedulerid
-                       AND a.bookinggroupid = :groupid
-                       $attendcond";
-        $params = ['schedulerid' => $this->id, 'groupid' => $groupid];
+          FROM {scheduler_slots} s
+          JOIN {scheduler_appointment} a ON a.slotid = s.id
+         WHERE s.schedulerid = :schedulerid
+               AND (
+                   a.bookinggroupid = :groupid
+                   OR (
+                       a.bookinggroupid = -1
+                       AND EXISTS (
+                           SELECT 1
+                             FROM {groups_members} gm
+                            WHERE gm.userid = a.studentid
+                                  AND gm.groupid = :legacygroupid
+                       )
+                   )
+               )
+               $attendcond";
+
+        $params = [
+                'schedulerid' => $this->id,
+                'groupid' => $groupid,
+                'legacygroupid' => $groupid,
+        ];
         return $DB->count_records_sql($sql, $params) > 0;
     }
 
