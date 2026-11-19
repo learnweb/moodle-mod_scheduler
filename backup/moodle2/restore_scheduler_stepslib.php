@@ -135,9 +135,9 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $bookinggroupid = (int) ($data->bookinggroupid ?? -1);
         if ($bookinggroupid > 0) {
             $data->bookinggroupid = $this->get_mappingid(
-                    'group',
-                    $bookinggroupid,
-                    0
+                'group',
+                $bookinggroupid,
+                0
             );
         } else {
             // Preserve individual bookings and bookings with an unknown group.
