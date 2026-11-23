@@ -132,7 +132,8 @@ function scheduler_action_doaddsession($scheduler, $formdata, moodle_url $return
                         $conflictmsg .= get_string('conflictingslots', 'scheduler', userdate($data->timestart));
                         $conflictmsg .= $output->doc_link('mod/scheduler/conflict', '', true);
                         $conflictmsg .= $output->render($cl);
-                    } else { // We force, so delete all conflicting before inserting.
+                    } else {
+                        // We force, so delete all conflicting before inserting.
                         foreach ($conflicts as $conflict) {
                             $cslot = $scheduler->get_slot($conflict->id);
                             \mod_scheduler\event\slot_deleted::create_from_slot($cslot, 'addsession-conflict')->trigger();
