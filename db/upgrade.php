@@ -416,6 +416,15 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2022120200, 'scheduler');
     }
 
+    /* ******************* 4.2 upgrade line ********************** */
+    if ($oldversion < 2023052300) {
+        upgrade_mod_savepoint(true, 2023052300, 'scheduler');
+    }
+
+    if ($oldversion < 2024080103) {
+        upgrade_mod_savepoint(true, 2024080103, 'scheduler');
+    }
+
     if ($oldversion < 2026090200) {
         $table = new xmldb_table('scheduler');
         $field = new xmldb_field('visibility', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '2', 'timemodified');
