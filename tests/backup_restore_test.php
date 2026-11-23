@@ -70,9 +70,9 @@ final class backup_restore_test extends \advanced_testcase {
      * @throws \core\exception\moodle_exception
      */
     public function test_duplicate_with_copying_slots(
-            int $groupcreation,
-            int $exclusivity,
-            bool $expectnewgroup,
+        int $groupcreation,
+        int $exclusivity,
+        bool $expectnewgroup,
     ): void {
         global $DB;
 
@@ -94,13 +94,13 @@ final class backup_restore_test extends \advanced_testcase {
 
         // Create a scheduler with one booked slot.
         $scheduler = $generator->create_module(
-                'scheduler',
-                [
+            'scheduler',
+            [
                         'course' => $course->id,
                         'copyslotsonduplicate' => 1,
                         'groupcreation' => $groupcreation,
                 ],
-                [
+            [
                         'slottimes' => [time() + DAYSECS],
                         'slotteachers' => [$teacher->id],
                         'slotstudents' => [[$student->id]],
@@ -148,16 +148,16 @@ final class backup_restore_test extends \advanced_testcase {
             $this->assertNotEquals($group->id, $copiedslot->coursegroupid);
 
             $copiedgroup = $DB->get_record(
-                    'groups',
-                    ['id' => $copiedslot->coursegroupid],
-                    '*',
-                    MUST_EXIST
+                'groups',
+                ['id' => $copiedslot->coursegroupid],
+                '*',
+                MUST_EXIST
             );
 
             $this->assertEquals($course->id, $copiedgroup->courseid);
             $this->assertEquals(
-                    0,
-                    $DB->count_records('groups_members', ['groupid' => $copiedgroup->id])
+                0,
+                $DB->count_records('groups_members', ['groupid' => $copiedgroup->id])
             );
         } else {
             $this->assertEquals(0, (int) $copiedslot->coursegroupid);

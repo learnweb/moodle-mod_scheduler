@@ -23,6 +23,7 @@
  */
 
 namespace mod_scheduler;
+
 /**
  * Updates generated course group memberships from individual slot bookings.
  */

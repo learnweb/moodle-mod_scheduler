@@ -172,10 +172,10 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         // Create independent group for copied group slots when configured.
         if ($this->copyslots && !$userinfo && (int) $data->exclusivity !== 1) {
             $groupcreation = (int) $DB->get_field(
-                    'scheduler',
-                    'groupcreation',
-                    ['id' => $data->schedulerid],
-                    MUST_EXIST
+                'scheduler',
+                'groupcreation',
+                ['id' => $data->schedulerid],
+                MUST_EXIST
             );
 
             if ($groupcreation === 1) {
