@@ -114,11 +114,9 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
         // Define id annotations.
         $scheduler->annotate_ids('scale', 'scale');
 
-        if ($includeslots) {
-            $slot->annotate_ids('group', 'coursegroupid');
-        }
         if ($userinfo) {
             $slot->annotate_ids('user', 'teacherid');
+            $slot->annotate_ids('group', 'coursegroupid');
             $appointment->annotate_ids('user', 'studentid');
             $appointment->annotate_ids('group', 'bookinggroupid');
         }

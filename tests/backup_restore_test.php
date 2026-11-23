@@ -38,19 +38,42 @@ final class backup_restore_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that duplication preserves slot details, teacher assignments and group
-     * restrictions without copying bookings or modifying the original activity.
+     * Provides group settings and expected duplication behavior.
      *
-     * @return void
-     * @throws \coding_exception
-     * @throws \core\exception\coding_exception
-     * @throws \core\exception\moodle_exception
-     * @throws \dml_exception
+     * @return array
+     */
+    public static function duplicate_group_settings_provider(): array {
+        return [
+                'group creation disabled' => [0, 0, false],
+                'create group immediately' => [1, 0, true],
+                'create group on first booking' => [2, 0, false],
+                'single-person slot' => [1, 1, false],
+        ];
+    }
+
+    /**
+     * Tests that duplication preserves slot details and teacher assignments,
+     * handles generated groups independently, and excludes bookings.
+     *
+     * @param int $groupcreation
+     * @param int $exclusivity
+     * @param bool $expectnewgroup
      *
      * @covers \backup_scheduler_activity_structure_step
      * @covers \restore_scheduler_activity_structure_step
+     * @return void
+     * @throws \dml_exception
+     *
+     * @dataProvider duplicate_group_settings_provider
+     * @throws \coding_exception
+     * @throws \core\exception\coding_exception
+     * @throws \core\exception\moodle_exception
      */
-    public function test_duplicate_with_copying_slots(): void {
+    public function test_duplicate_with_copying_slots(
+            int $groupcreation,
+            int $exclusivity,
+            bool $expectnewgroup,
+    ): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -71,9 +94,18 @@ final class backup_restore_test extends \advanced_testcase {
 
         // Create a scheduler with one booked slot.
         $scheduler = $generator->create_module(
-            'scheduler',
-            ['course' => $course->id, 'copyslotsonduplicate' => 1],
-            ['slottimes' => [time() + DAYSECS], 'slotteachers' => [$teacher->id], 'slotstudents' => [[$student->id]] ]
+                'scheduler',
+                [
+                        'course' => $course->id,
+                        'copyslotsonduplicate' => 1,
+                        'groupcreation' => $groupcreation,
+                ],
+                [
+                        'slottimes' => [time() + DAYSECS],
+                        'slotteachers' => [$teacher->id],
+                        'slotstudents' => [[$student->id]],
+                        'slotexclusivity' => [$exclusivity],
+                ]
         );
 
         $originalslot = $DB->get_record('scheduler_slots', ['schedulerid' => $scheduler->id], '*', MUST_EXIST);
@@ -106,9 +138,30 @@ final class backup_restore_test extends \advanced_testcase {
         // The copied slot belongs to the new Scheduler.
         $this->assertEquals($duplicateid, $copiedslot->schedulerid);
 
-        // Teacher assignment and group restriction are preserved.
+        // The teacher assignment is preserved.
         $this->assertEquals($teacher->id, $copiedslot->teacherid);
-        $this->assertEquals($group->id, $copiedslot->coursegroupid);
+        $this->assertEquals($exclusivity, $copiedslot->exclusivity);
+
+        // Generated groups are independent of the original slot.
+        if ($expectnewgroup) {
+            $this->assertGreaterThan(0, (int) $copiedslot->coursegroupid);
+            $this->assertNotEquals($group->id, $copiedslot->coursegroupid);
+
+            $copiedgroup = $DB->get_record(
+                    'groups',
+                    ['id' => $copiedslot->coursegroupid],
+                    '*',
+                    MUST_EXIST
+            );
+
+            $this->assertEquals($course->id, $copiedgroup->courseid);
+            $this->assertEquals(
+                    0,
+                    $DB->count_records('groups_members', ['groupid' => $copiedgroup->id])
+            );
+        } else {
+            $this->assertEquals(0, (int) $copiedslot->coursegroupid);
+        }
 
         // The original slot's assignments remain unchanged.
         $unchangedslot = $DB->get_record('scheduler_slots', ['id' => $originalslot->id], '*', MUST_EXIST);
@@ -116,6 +169,11 @@ final class backup_restore_test extends \advanced_testcase {
         $this->assertEquals($scheduler->id, $unchangedslot->schedulerid);
         $this->assertEquals($teacher->id, $unchangedslot->teacherid);
         $this->assertEquals($group->id, $unchangedslot->coursegroupid);
+
+        $this->assertTrue($DB->record_exists('groups_members', [
+                'groupid' => $group->id,
+                'userid' => $student->id,
+        ]));
 
         // The original booking remains.
         $this->assertEquals(1, $DB->count_records('scheduler_appointment', ['slotid' => $originalslot->id]));
