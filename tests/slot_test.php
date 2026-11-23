@@ -306,7 +306,7 @@ final class slot_test extends \advanced_testcase
         $scheduler = scheduler::load_by_id($this->schedulerid);
         $slot = slot::load_by_id($this->slotid, $scheduler);
 
-        $appointment = $slot->get_student_appointment($this->appointmentids[0]);
+        $appointment = $slot->get_student_appointment($this->students[0]);
         $this->assertNotNull($appointment);
         $appointment->attended = 1;
         $slot->save();
@@ -326,7 +326,7 @@ final class slot_test extends \advanced_testcase
         $scheduler = scheduler::load_by_id($this->schedulerid);
         $slot = slot::load_by_id($this->slotid, $scheduler);
 
-        $appointment = $slot->get_student_appointment($this->appointmentids[0]);
+        $appointment = $slot->get_student_appointment($this->students[0]);
         $this->assertNotNull($appointment);
         $appointment->attended = 1;
         $slot->save();
