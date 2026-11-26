@@ -118,6 +118,17 @@ class mod_scheduler_mod_form extends moodleform_mod
             $mform->addElement('select', 'bookingrouping', get_string('groupbookings', 'scheduler'), $selopt);
             $mform->addHelpButton('bookingrouping', 'groupbookings', 'scheduler');
             $mform->setDefault('bookingrouping', '-1');
+
+            // Allowed booking types when group booking is enabled.
+            $bookingtypes = [
+                1 => get_string('bookingtypeboth', 'scheduler'),
+                2 => get_string('bookingtypegroup', 'scheduler'),
+            ];
+
+            $mform->addElement('select', 'bookingtype', get_string('bookingtype', 'scheduler'), $bookingtypes);
+            $mform->addHelpButton('bookingtype', 'bookingtype', 'scheduler');
+            $mform->setDefault('bookingtype', get_config('mod_scheduler', 'mixindivgroup') ? 1 : 2);
+            $mform->hideIf('bookingtype', 'bookingrouping', 'eq', '-1');
         }
 
         // Automatic course group creation.
@@ -309,6 +320,16 @@ class mod_scheduler_mod_form extends moodleform_mod
         ) {
             $errors['bookingend'] = get_string('bookingendbeforestart', 'scheduler');
         }
+
+        $grouponly = get_config('mod_scheduler', 'groupscheduling')
+                && ($data['bookingrouping'] ?? -1) >= 0
+                && (int) ($data['bookingtype'] ?? 1) === 2;
+
+        if ($grouponly && (int) ($data['groupcreation'] ?? 0) !== 0) {
+            $errors['groupcreation'] =
+                    get_string('groupcreationrequiresindividual', 'scheduler');
+        }
+
         return $errors;
     }
 
