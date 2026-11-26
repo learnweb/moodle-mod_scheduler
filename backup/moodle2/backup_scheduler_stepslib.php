@@ -47,14 +47,14 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
             'scale', 'gradingstrategy', 'bookingrouping', 'usenotes',
             'usebookingform', 'bookinginstructions', 'bookinginstructionsformat',
             'usestudentnotes', 'requireupload', 'uploadmaxfiles', 'uploadmaxsize',
-            'usecaptcha', 'timemodified', 'bookingstart', 'bookingend', 'visibility', ]);
+            'usecaptcha', 'timemodified', 'bookingstart', 'bookingend', 'visibility', 'groupcreation', ]);
 
         $slots = new backup_nested_element('slots');
 
         $slot = new backup_nested_element('slot', ['id'], [
             'starttime', 'duration', 'teacherid', 'appointmentlocation',
             'timemodified', 'notes', 'notesformat', 'exclusivity',
-            'emaildate', 'hideuntil', 'visibility', ]);
+            'emaildate', 'hideuntil', 'visibility', 'coursegroupid', ]);
 
         $appointments = new backup_nested_element('appointments');
 
@@ -86,6 +86,7 @@ class backup_scheduler_activity_structure_step extends backup_activity_structure
 
         if ($userinfo) {
             $slot->annotate_ids('user', 'teacherid');
+            $slot->annotate_ids('group', 'coursegroupid');
             $appointment->annotate_ids('user', 'studentid');
             $appointment->annotate_ids('group', 'bookinggroupid');
         }

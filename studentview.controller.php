@@ -348,6 +348,7 @@ if ($action == 'cancelbooking') {
     }
 
     foreach ($appointmentstocancel as $appointment) {
+        $appointmentdata = $appointment->get_data();
         $scheduler->delete_appointment($appointment->id);
 
         // Notify the teacher.
@@ -366,7 +367,7 @@ if ($action == 'cancelbooking') {
             );
         }
 
-        \mod_scheduler\event\booking_removed::create_from_slot($slot)->trigger();
+        \mod_scheduler\event\booking_removed::create_from_slot($slot, $appointmentdata)->trigger();
     }
 
     redirect($returnurl);

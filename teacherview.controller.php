@@ -301,8 +301,10 @@ switch ($action) {
         $permissions->ensure($permissions->can_edit_slot($slot));
 
         $oldstudents = [];
+        $removedappointments = [];
         foreach ($slot->get_appointments() as $app) {
             $oldstudents[] = $app->studentid;
+            $removedappointments[] = $app->get_data();
             $slot->remove_appointment($app);
         }
 
@@ -328,6 +330,11 @@ switch ($action) {
         }
 
         $slot->save();
+
+        foreach ($removedappointments as $appointment) {
+            \mod_scheduler\course_group_helper::remove_booked_students($slot, $appointment);
+        }
+
         redirect($viewurl);
         break;
 
