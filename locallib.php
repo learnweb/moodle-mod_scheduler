@@ -81,7 +81,8 @@ function scheduler_print_user($user, $course, $messageselect = false, $return = 
         $usercontext = context_user::instance($user->id);
     }
 
-    if (empty($string)) {     // Cache all the strings for the rest of the page.
+    if (empty($string)) {
+        // Cache all the strings for the rest of the page.
         $string = new stdClass();
         $string->email       = get_string('email');
         $string->lastaccess  = get_string('lastaccess');
