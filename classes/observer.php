@@ -23,6 +23,7 @@
  */
 
 namespace mod_scheduler;
+
 /**
  * Event observers for scheduler.
  */
