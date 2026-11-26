@@ -70,13 +70,17 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
+        $data->bookingstart = $this->apply_date_offset($data->bookingstart ?? 0);
+        $data->bookingend = $this->apply_date_offset($data->bookingend ?? 0);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        if ($data->scale < 0) { // Scale found, get mapping.
+        if ($data->scale < 0) {
+            // Scale found, get mapping.
             $data->scale = -($this->get_mappingid('scale', abs($data->scale)));
         }
 
-        if (is_null($data->gradingstrategy)) { // Catch inconsistent data created by pre-1.9 DB schema.
+        if (is_null($data->gradingstrategy)) {
+            // Catch inconsistent data created by pre-1.9 DB schema.
             $data->gradingstrategy = 0;
         }
 

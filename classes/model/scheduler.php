@@ -237,6 +237,35 @@ class scheduler extends mvc_record_model
     }
 
     /**
+     * Whether booking period has started.
+     *
+     * @return bool
+     */
+    public function has_booking_started(): bool {
+        $bookingstart = $this->bookingstart;
+        return empty($bookingstart) || time() >= $bookingstart;
+    }
+
+    /**
+     * Whether booking period has ended.
+     *
+     * @return bool
+     */
+    public function has_booking_ended(): bool {
+        $bookingend = $this->bookingend;
+        return !empty($bookingend) && time() > $bookingend;
+    }
+
+    /**
+     * Whether booking is currently open.
+     *
+     * @return bool
+     */
+    public function is_booking_open(): bool {
+        return $this->has_booking_started() && !$this->has_booking_ended();
+    }
+
+    /**
      * Retrieve the name for "teacher" in the context of this scheduler
      *
      * TODO: This involves part of the presentation, should it be here?
@@ -450,7 +479,8 @@ class scheduler extends mvc_record_model
             $finalgrades[$grade->studentid]->userid = $grade->studentid;
         }
 
-        if ($this->scale > 0) { // Grading numerically.
+        if ($this->scale > 0) {
+            // Grading numerically.
             foreach ($grades as $grade) {
                 $gradesums[$grade->studentid]->sum = @$gradesums[$grade->studentid]->sum + $grade->grade;
                 $gradesums[$grade->studentid]->count = @$gradesums[$grade->studentid]->count + 1;
@@ -469,7 +499,8 @@ class scheduler extends mvc_record_model
                         break;
                 }
             }
-        } else { // Grading on scales.
+        } else {
+            // Grading on scales.
             $scaleid = - ($this->scale);
             $maxgrade = '';
             if ($scale = $DB->get_record('scale', ['id' => $scaleid])) {
@@ -755,7 +786,7 @@ class scheduler extends mvc_record_model
         global $DB;
 
         $params = [];
-        $wherecond = "(s.starttime > :cutofftime) AND (s.hideuntil < :nowhide)";
+        $wherecond = "(s.starttime > :cutofftime) AND (s.hideuntil <= :nowhide)";
         $params['nowhide'] = time();
         $params['cutofftime'] = time() + $this->guardtime;
         $subcond = 'NOT (' . $this->student_in_slot_condition($params, $studentid, false, false) . ')';
