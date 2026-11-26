@@ -476,6 +476,7 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         }
         upgrade_mod_savepoint(true, 2026090200, 'scheduler');
     }
+
     if ($oldversion < 2026092200) {
         $table = new xmldb_table('scheduler_appointment');
         $field = new xmldb_field(
@@ -490,9 +491,9 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
-        }
 
         $DB->set_field('scheduler_appointment', 'bookinggroupid', -1);
+        }
 
         upgrade_mod_savepoint(true, 2026092200, 'scheduler');
     }
