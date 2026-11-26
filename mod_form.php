@@ -61,6 +61,18 @@ class mod_scheduler_mod_form extends moodleform_mod
 
         $this->standard_intro_elements(get_string('introduction', 'scheduler'));
 
+        // Booking period.
+        $mform->addElement('header', 'bookingperiodhdr', get_string('bookingperiod', 'scheduler'));
+        $mform->addElement('date_time_selector', 'bookingstart', get_string('bookingstart', 'scheduler'), ['optional' => true]);
+        $mform->setType('bookingstart', PARAM_INT);
+        $mform->addHelpButton('bookingstart', 'bookingstart', 'scheduler');
+
+        $mform->addElement('date_time_selector', 'bookingend', get_string('bookingend', 'scheduler'), ['optional' => true]);
+        $mform->setType('bookingend', PARAM_INT);
+        $mform->addHelpButton('bookingend', 'bookingend', 'scheduler');
+
+        $mform->setExpanded('bookingperiodhdr');
+
         // Scheduler options.
         $mform->addElement('header', 'optionhdr', get_string('options', 'scheduler'));
         $mform->setExpanded('optionhdr');
@@ -146,6 +158,12 @@ class mod_scheduler_mod_form extends moodleform_mod
         $noteoptions['3'] = get_string('usenotesboth', 'scheduler');
         $mform->addElement('select', 'usenotes', get_string('usenotes', 'scheduler'), $noteoptions);
         $mform->setDefault('usenotes', '1');
+
+        // Member visibility.
+        $mform->addElement('select', 'visibility', get_string('visibility', 'scheduler'), $this->get_visibilities());
+        $mform->setType('visibility', PARAM_INT);
+        $mform->setDefault('visibility', SCHEDULER_VISIBILITY_SLOT);
+        $mform->addHelpButton('visibility', 'visibility', 'scheduler');
 
         $mform->addElement('selectyesno', 'copyslotsonduplicate', get_string('copyslotsonduplicate', 'scheduler'));
         $mform->setType('copyslotsonduplicate', PARAM_INT);
@@ -290,17 +308,23 @@ class mod_scheduler_mod_form extends moodleform_mod
     }
 
     /**
-     * Validation to not allow contradictory group slot settings. When only group bookings are allowed, automatic group
-     * creation should never happen.
+     * Validate form data.
      *
-     * @param array $data Submitted form values.
-     * @param array $files Submitted files.
-     * @return array
+     * @param array $data
+     * @param array $files
+     * @return array Validation errors
      * @throws coding_exception
-     * @throws dml_exception
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
+        if (
+            !empty($data['bookingstart']) &&
+            !empty($data['bookingend']) &&
+            $data['bookingstart'] >= $data['bookingend']
+        ) {
+            $errors['bookingend'] = get_string('bookingendbeforestart', 'scheduler');
+        }
 
         $grouponly = get_config('mod_scheduler', 'groupscheduling')
                 && ($data['bookingrouping'] ?? -1) >= 0
@@ -312,6 +336,25 @@ class mod_scheduler_mod_form extends moodleform_mod
         }
 
         return $errors;
+    }
+
+    /**
+     * Retrieves visibility options for the scheduler.
+     *
+     * This function returns an associative array of available visibility settings
+     * for the scheduler. The keys of the array are the visibility constants defined
+     * elsewhere, and the values are the respective language strings for those options.
+     *
+     * @return array An associative array where the keys are visibility constants
+     *               and the values are localized strings for the visibility modes.
+     * @throws coding_exception
+     */
+    private function get_visibilities(): array {
+        return [
+            SCHEDULER_VISIBILITY_ALL => get_string('visibility_all', 'scheduler'),
+            SCHEDULER_VISIBILITY_ANONYMOUS => get_string('visibility_anonymous', 'scheduler'),
+            SCHEDULER_VISIBILITY_SLOT => get_string('visibility_slot', 'scheduler'),
+        ];
     }
 
     /**
