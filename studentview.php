@@ -43,7 +43,8 @@ $actionurl = new moodle_url('/mod/scheduler/view.php', $urlparas);
 
 // General permissions check.
 require_capability('mod/scheduler:viewslots', $context);
-$canbook = has_capability('mod/scheduler:appoint', $context);
+$bookingisopen = $scheduler->is_booking_open();
+$canbook = has_capability('mod/scheduler:appoint', $context) && $bookingisopen;
 $canseefull = has_capability('mod/scheduler:viewfullslots', $context);
 
 if ($scheduler->is_group_scheduling_enabled()) {
@@ -110,6 +111,20 @@ if ($scheduler->is_group_scheduling_enabled()) {
     echo html_writer::div(get_string('appointforgroup', 'scheduler', $select), 'dropdownmenu');
 }
 
+if (!$scheduler->has_booking_started()) {
+    $message = get_string('bookingnotstarted', 'scheduler', userdate($scheduler->bookingstart));
+    echo $output->notification($message, \core\output\notification::NOTIFY_INFO);
+    echo $output->footer();
+    return;
+}
+
+if ($scheduler->has_booking_ended()) {
+    $message = get_string('bookingended', 'scheduler', userdate($scheduler->bookingend));
+    echo $output->notification($message, \core\output\notification::NOTIFY_INFO);
+    echo $output->footer();
+    return;
+}
+
 // Get past (attended) slots.
 
 $pastslots = $scheduler->get_attended_slots_for_student($USER->id);
@@ -119,13 +134,18 @@ if (count($pastslots) > 0) {
     foreach ($pastslots as $pastslot) {
         $appointment = $pastslot->get_student_appointment($USER->id);
 
-        if ($pastslot->is_groupslot() && has_capability('mod/scheduler:seeotherstudentsresults', $context)) {
+        $showothermembers = $pastslot->visibility == SCHEDULER_VISIBILITY_ALL ||
+                ($pastslot->visibility == SCHEDULER_VISIBILITY_SLOT && $appointment !== null);
+
+        if ($pastslot->is_groupslot() && $showothermembers && has_capability('mod/scheduler:seeotherstudentsresults', $context)) {
             $others = new scheduler_student_list($scheduler, true);
             foreach ($pastslot->get_appointments() as $otherapp) {
                 $othermark = $scheduler->get_gradebook_info($otherapp->studentid);
                 $gradehidden = !is_null($othermark) && ($othermark->hidden <> 0);
                 $others->add_student($otherapp, $otherapp->studentid == $USER->id, false, !$gradehidden);
             }
+            $others->expandable = true;
+            $others->expanded = false;
         } else {
             $others = null;
         }
@@ -146,7 +166,10 @@ if (count($upcomingslots) > 0) {
     foreach ($upcomingslots as $slot) {
         $appointment = $slot->get_student_appointment($USER->id);
 
-        if ($slot->is_groupslot() && has_capability('mod/scheduler:seeotherstudentsbooking', $context)) {
+        $showothermembers = $slot->visibility == SCHEDULER_VISIBILITY_ALL ||
+                ($slot->visibility == SCHEDULER_VISIBILITY_SLOT && $appointment !== null);
+
+        if ($slot->is_groupslot() && $showothermembers && has_capability('mod/scheduler:seeotherstudentsbooking', $context)) {
             $showothergrades = has_capability('mod/scheduler:seeotherstudentsresults', $context);
             $others = new scheduler_student_list($scheduler);
             foreach ($slot->get_appointments() as $otherapp) {
@@ -155,11 +178,13 @@ if (count($upcomingslots) > 0) {
                                (!$showothergrades && $otherapp->studentid <> $USER->id);
                 $others->add_student($otherapp, $otherapp->studentid == $USER->id, false, !$gradehidden);
             }
+            $others->expandable = true;
+            $others->expanded = false;
         } else {
             $others = null;
         }
 
-        $cancancel = $slot->is_in_bookable_period();
+        $cancancel = $bookingisopen && $slot->is_in_bookable_period();
         $canedit = $cancancel && $scheduler->uses_studentdata();
         $canview = !$cancancel && $scheduler->uses_studentdata();
         if ($scheduler->is_group_scheduling_enabled()) {
@@ -210,7 +235,12 @@ if (!$canseefull && $bookablecnt == 0) {
         $slot = $bookableslots[$idx];
         $canbookthisslot = $canbook && ($bookablecnt != 0);
 
-        if (has_capability('mod/scheduler:seeotherstudentsbooking', $context)) {
+        $appointment = $slot->get_student_appointment($USER->id);
+
+        $showothermembers = $slot->visibility == SCHEDULER_VISIBILITY_ALL ||
+                ($slot->visibility == SCHEDULER_VISIBILITY_SLOT && $appointment !== null);
+
+        if ($showothermembers && has_capability('mod/scheduler:seeotherstudentsbooking', $context)) {
             $others = new scheduler_student_list($scheduler, false);
             foreach ($slot->get_appointments() as $otherapp) {
                 $others->add_student($otherapp, $otherapp->studentid == $USER->id);
@@ -231,7 +261,8 @@ if (!$canseefull && $bookablecnt == 0) {
         } else {
             if ($remaining > 0) {
                 $groupinfo = get_string('limited', 'scheduler', $remaining . '/' . $slot->exclusivity);
-            } else { // Group info should not be visible to students.
+            } else {
+                // Group info should not be visible to students.
                 $groupinfo = get_string('complete', 'scheduler');
                 $canbookthisslot = false;
             }
