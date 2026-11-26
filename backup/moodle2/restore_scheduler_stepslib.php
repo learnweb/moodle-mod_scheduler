@@ -70,13 +70,17 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
+        $data->bookingstart = $this->apply_date_offset($data->bookingstart ?? 0);
+        $data->bookingend = $this->apply_date_offset($data->bookingend ?? 0);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        if ($data->scale < 0) { // Scale found, get mapping.
+        if ($data->scale < 0) {
+            // Scale found, get mapping.
             $data->scale = -($this->get_mappingid('scale', abs($data->scale)));
         }
 
-        if (is_null($data->gradingstrategy)) { // Catch inconsistent data created by pre-1.9 DB schema.
+        if (is_null($data->gradingstrategy)) {
+            // Catch inconsistent data created by pre-1.9 DB schema.
             $data->gradingstrategy = 0;
         }
 
@@ -136,8 +140,18 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
 
         $data->studentid = $this->get_mappingid('user', $data->studentid);
 
-        $data->bookinggroupid = !empty($data->bookinggroupid)
-            ? $this->get_mappingid('group', $data->bookinggroupid, 0) : 0;
+        // Backups made before group tracking do not contain this field.
+        $bookinggroupid = (int) ($data->bookinggroupid ?? -1);
+        if ($bookinggroupid > 0) {
+            $data->bookinggroupid = $this->get_mappingid(
+                'group',
+                $bookinggroupid,
+                0
+            );
+        } else {
+            // Preserve individual bookings and bookings with an unknown group.
+            $data->bookinggroupid = $bookinggroupid;
+        }
 
         $newitemid = $DB->insert_record('scheduler_appointment', $data);
         $this->set_mapping('scheduler_appointment', $oldid, $newitemid, true);

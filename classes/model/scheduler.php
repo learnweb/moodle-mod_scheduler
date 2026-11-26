@@ -237,6 +237,35 @@ class scheduler extends mvc_record_model
     }
 
     /**
+     * Whether booking period has started.
+     *
+     * @return bool
+     */
+    public function has_booking_started(): bool {
+        $bookingstart = $this->bookingstart;
+        return empty($bookingstart) || time() >= $bookingstart;
+    }
+
+    /**
+     * Whether booking period has ended.
+     *
+     * @return bool
+     */
+    public function has_booking_ended(): bool {
+        $bookingend = $this->bookingend;
+        return !empty($bookingend) && time() > $bookingend;
+    }
+
+    /**
+     * Whether booking is currently open.
+     *
+     * @return bool
+     */
+    public function is_booking_open(): bool {
+        return $this->has_booking_started() && !$this->has_booking_ended();
+    }
+
+    /**
      * Retrieve the name for "teacher" in the context of this scheduler
      *
      * TODO: This involves part of the presentation, should it be here?
@@ -450,7 +479,8 @@ class scheduler extends mvc_record_model
             $finalgrades[$grade->studentid]->userid = $grade->studentid;
         }
 
-        if ($this->scale > 0) { // Grading numerically.
+        if ($this->scale > 0) {
+            // Grading numerically.
             foreach ($grades as $grade) {
                 $gradesums[$grade->studentid]->sum = @$gradesums[$grade->studentid]->sum + $grade->grade;
                 $gradesums[$grade->studentid]->count = @$gradesums[$grade->studentid]->count + 1;
@@ -469,7 +499,8 @@ class scheduler extends mvc_record_model
                         break;
                 }
             }
-        } else { // Grading on scales.
+        } else {
+            // Grading on scales.
             $scaleid = - ($this->scale);
             $maxgrade = '';
             if ($scale = $DB->get_record('scale', ['id' => $scaleid])) {
@@ -823,12 +854,28 @@ class scheduler extends mvc_record_model
         }
 
         $sql = "SELECT COUNT(*)
-                  FROM {scheduler_slots} s
-                  JOIN {scheduler_appointment} a ON a.slotid = s.id
-                 WHERE s.schedulerid = :schedulerid
-                       AND a.bookinggroupid = :groupid
-                       $attendcond";
-        $params = ['schedulerid' => $this->id, 'groupid' => $groupid];
+          FROM {scheduler_slots} s
+          JOIN {scheduler_appointment} a ON a.slotid = s.id
+         WHERE s.schedulerid = :schedulerid
+               AND (
+                   a.bookinggroupid = :groupid
+                   OR (
+                       a.bookinggroupid = -1
+                       AND EXISTS (
+                           SELECT 1
+                             FROM {groups_members} gm
+                            WHERE gm.userid = a.studentid
+                                  AND gm.groupid = :legacygroupid
+                       )
+                   )
+               )
+               $attendcond";
+
+        $params = [
+                'schedulerid' => $this->id,
+                'groupid' => $groupid,
+                'legacygroupid' => $groupid,
+        ];
         return $DB->count_records_sql($sql, $params) > 0;
     }
 
