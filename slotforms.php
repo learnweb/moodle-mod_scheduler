@@ -115,6 +115,11 @@ abstract class scheduler_slotform_base extends moodleform
         $mform->setDefault('appointmentlocation', $this->scheduler->get_last_location($USER));
         $mform->addHelpButton('appointmentlocation', 'location', 'scheduler');
 
+        // Optional meeting link.
+        $mform->addElement('text', 'meetingurl', get_string('meetingurl', 'scheduler'), ['size' => '60']);
+        $mform->setType('meetingurl', PARAM_RAW_TRIMMED);
+        $mform->addHelpButton('meetingurl', 'meetingurl', 'scheduler');
+
         // Choose the teacher (if allowed).
         if (has_capability('mod/scheduler:canscheduletootherteachers', $this->scheduler->get_context())) {
             $teachername = s($this->scheduler->get_teacher_name());
@@ -211,6 +216,18 @@ abstract class scheduler_slotform_base extends moodleform
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+        $meetingurl = $data['meetingurl'] ?? '';
+
+        if ($meetingurl != '') {
+            if (\core_text::strlen($meetingurl) > 2048) {
+                $errors['meetingurl'] = get_string('meetingurltoolong', 'scheduler');
+            } else if (
+                !preg_match('~^https?://~i', $meetingurl) ||
+                clean_param($meetingurl, PARAM_URL) !== $meetingurl
+            ) {
+                $errors['meetingurl'] = get_string('invalidmeetingurl', 'scheduler');
+            }
+        }
 
         // Check duration for valid range.
         if ($this->hasduration) {
@@ -553,6 +570,7 @@ class scheduler_editslot_form extends scheduler_slotform_base
         $slot->teacherid = $data->teacherid;
         $slot->appointmentlocation = $data->appointmentlocation;
         $slot->visibility = $data->visibility;
+        $slot->meetingurl = $data->meetingurl;
         $slot->hideuntil = $data->hideuntil;
         $slot->emaildate = $data->emaildate;
         $slot->timemodified = time();

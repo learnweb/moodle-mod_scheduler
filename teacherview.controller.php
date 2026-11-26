@@ -51,6 +51,7 @@ function scheduler_action_doaddsession($scheduler, $formdata, moodle_url $return
     $slot->teacherid = $data->teacherid;
     $slot->appointmentlocation = $data->appointmentlocation;
     $slot->visibility = $data->visibility;
+    $slot->meetingurl = $data->meetingurl;
     $slot->exclusivity = $data->exclusivityenable ? $data->exclusivity : 0;
     if ($data->divide) {
         $slot->duration = $data->duration;
