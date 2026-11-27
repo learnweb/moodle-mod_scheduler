@@ -165,6 +165,11 @@ class mod_scheduler_mod_form extends moodleform_mod
         $mform->setDefault('visibility', SCHEDULER_VISIBILITY_SLOT);
         $mform->addHelpButton('visibility', 'visibility', 'scheduler');
 
+        $mform->addElement('selectyesno', 'copyslotsonduplicate', get_string('copyslotsonduplicate', 'scheduler'));
+        $mform->setType('copyslotsonduplicate', PARAM_INT);
+        $mform->setDefault('copyslotsonduplicate', 0);
+        $mform->addHelpButton('copyslotsonduplicate', 'copyslotsonduplicate', 'scheduler');
+
         // Grade settings.
         $this->standard_grading_coursemodule_elements();
 

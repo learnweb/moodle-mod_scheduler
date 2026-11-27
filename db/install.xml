@@ -16,6 +16,7 @@
         <FIELD NAME="guardtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="reuseguardtime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="legacy"/>
         <FIELD NAME="defaultslotduration" TYPE="int" LENGTH="4" NOTNULL="false" DEFAULT="15" SEQUENCE="false"/>
+        <FIELD NAME="copyslotsonduplicate" SEQUENCE="false" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="allownotifications" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="staffrolename" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="scale" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
