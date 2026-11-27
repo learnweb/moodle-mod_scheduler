@@ -425,6 +425,58 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2024080103, 'scheduler');
     }
 
+    /* ******************* 5.2 upgrade line ********************** */
+
+    if ($oldversion < 2026082600) {
+        $table = new xmldb_table('scheduler');
+        $field = new xmldb_field(
+            'bookingstart',
+            XMLDB_TYPE_INTEGER,
+            '10',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'usecaptcha'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field(
+            'bookingend',
+            XMLDB_TYPE_INTEGER,
+            '10',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'bookingstart'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026082600, 'scheduler');
+    }
+
+    if ($oldversion < 2026090200) {
+        $table = new xmldb_table('scheduler');
+        $field = new xmldb_field('visibility', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '2', 'timemodified');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('scheduler_slots');
+        $field = new xmldb_field('visibility', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '2', 'hideuntil');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026090200, 'scheduler');
+    }
+
     if ($oldversion < 2026092200) {
         $table = new xmldb_table('scheduler_appointment');
         $field = new xmldb_field(
@@ -439,6 +491,8 @@ function xmldb_scheduler_upgrade($oldversion = 0) {
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
+
+            $DB->set_field('scheduler_appointment', 'bookinggroupid', -1);
         }
 
         upgrade_mod_savepoint(true, 2026092200, 'scheduler');
