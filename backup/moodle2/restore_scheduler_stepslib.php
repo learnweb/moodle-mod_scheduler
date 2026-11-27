@@ -74,25 +74,6 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         }
 
         return $this->prepare_activity_structure($paths);
-
-        $userinfo = $this->get_setting_value('userinfo');
-
-        $scheduler = new restore_path_element('scheduler', '/activity/scheduler');
-        $paths[] = $scheduler;
-
-        if ($userinfo) {
-            $slot = new restore_path_element('scheduler_slot', '/activity/scheduler/slots/slot');
-            $paths[] = $slot;
-
-            $appointment = new restore_path_element(
-                'scheduler_appointment',
-                '/activity/scheduler/slots/slot/appointments/appointment'
-            );
-            $paths[] = $appointment;
-        }
-
-        // Return the paths wrapped into standard activity structure.
-        return $this->prepare_activity_structure($paths);
     }
 
     /**
@@ -107,13 +88,17 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
+        $data->bookingstart = $this->apply_date_offset($data->bookingstart ?? 0);
+        $data->bookingend = $this->apply_date_offset($data->bookingend ?? 0);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        if ($data->scale < 0) { // Scale found, get mapping.
+        if ($data->scale < 0) {
+            // Scale found, get mapping.
             $data->scale = -($this->get_mappingid('scale', abs($data->scale)));
         }
 
-        if (is_null($data->gradingstrategy)) { // Catch inconsistent data created by pre-1.9 DB schema.
+        if (is_null($data->gradingstrategy)) {
+            // Catch inconsistent data created by pre-1.9 DB schema.
             $data->gradingstrategy = 0;
         }
 
@@ -150,7 +135,7 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
      * @param stdClass $data
      */
     protected function process_scheduler_slot($data) {
-        global $DB;
+        global $CFG, $DB;
 
         $userinfo = $this->get_setting_value('userinfo');
         if (!$userinfo && !$this->copyslots) {
@@ -166,7 +151,7 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $data->emaildate = $this->apply_date_offset($data->emaildate);
         $data->hideuntil = $this->apply_date_offset($data->hideuntil);
         if ($this->copyslots && !$userinfo) {
-            // Same-site, same-course duplication retains existing references.
+            // Same-site, same-course duplication preserves the teacher assignment.
             if (!empty($data->teacherid)) {
                 $DB->get_record(
                     'user',
@@ -176,19 +161,7 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
                 );
             }
 
-            $data->coursegroupid = (int) ($data->coursegroupid ?? 0);
-
-            if ($data->coursegroupid > 0) {
-                $DB->get_record(
-                    'groups',
-                    [
-                                'id' => $data->coursegroupid,
-                                'courseid' => $this->get_courseid(),
-                        ],
-                    'id',
-                    MUST_EXIST
-                );
-            }
+            $data->coursegroupid = 0;
         } else {
             $data->teacherid = $this->get_mappingid('user', $data->teacherid);
 
@@ -199,6 +172,28 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
 
         $newitemid = $DB->insert_record('scheduler_slots', $data);
         $this->set_mapping('scheduler_slot', $oldid, $newitemid, true);
+
+        // Create independent group for copied group slots when configured.
+        if ($this->copyslots && !$userinfo && (int) $data->exclusivity !== 1) {
+            $groupcreation = (int) $DB->get_field(
+                'scheduler',
+                'groupcreation',
+                ['id' => $data->schedulerid],
+                MUST_EXIST
+            );
+
+            if ($groupcreation === 1) {
+                require_once($CFG->dirroot . '/mod/scheduler/locallib.php');
+
+                $copiedslot = (object) [
+                    'id' => $newitemid,
+                    'schedulerid' => $data->schedulerid,
+                    'starttime' => $data->starttime,
+                ];
+
+                scheduler_create_coursegroup($copiedslot);
+            }
+        }
     }
 
     /**
@@ -219,8 +214,18 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
 
         $data->studentid = $this->get_mappingid('user', $data->studentid);
 
-        $data->bookinggroupid = !empty($data->bookinggroupid)
-            ? $this->get_mappingid('group', $data->bookinggroupid, 0) : 0;
+        // Backups made before group tracking do not contain this field.
+        $bookinggroupid = (int) ($data->bookinggroupid ?? -1);
+        if ($bookinggroupid > 0) {
+            $data->bookinggroupid = $this->get_mappingid(
+                'group',
+                $bookinggroupid,
+                0
+            );
+        } else {
+            // Preserve individual bookings and bookings with an unknown group.
+            $data->bookinggroupid = $bookinggroupid;
+        }
 
         $newitemid = $DB->insert_record('scheduler_appointment', $data);
         $this->set_mapping('scheduler_appointment', $oldid, $newitemid, true);
