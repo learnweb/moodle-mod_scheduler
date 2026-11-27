@@ -62,7 +62,7 @@ Feature: Student-supplied data
     And I log out
 
     When I am on the "scheduler1" Activity page logged in as "teacher1"
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then I should see "Student 1" in the "3:00 AM" "table_row"
     And I should see "Student 2" in the "4:00 AM" "table_row"

@@ -184,7 +184,7 @@ Feature: Booking of appointments with individual tutors per group
     And I log out
 
     When I am on the "scheduler1" Activity page logged in as "manager1"
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "My appointments"
     Then "slotmanager" "table" should not exist
     And I should see "No students available for scheduling"

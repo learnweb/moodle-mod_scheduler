@@ -29,7 +29,7 @@ Feature: Teachers can write notes on slots and appointments
 
   Scenario: Teachers can enter slot notes and appointment notes for others to see
     When I am on the "scheduler1" Activity page logged in as "edteacher1"
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "All appointments"
     And I click on "Edit" "link" in the "4:00 AM" "table_row"
     And I set the following fields to these values:
@@ -47,7 +47,7 @@ Feature: Teachers can write notes on slots and appointments
     And I log out
 
     When I am on the "scheduler1" Activity page logged in as "edteacher1"
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "All appointments"
     And I click on "Student 1" "text" in the "4:00 AM" "table_row"
     Then I should see ", 4:00 AM" in the "Date and time" "table_row"
@@ -76,7 +76,7 @@ Feature: Teachers can write notes on slots and appointments
     And I log out
 
     When I am on the "scheduler1" Activity page logged in as "edteacher1"
-    And I follow "Statistics"
+    And I follow "Overview"
     And I follow "All appointments"
     And I click on "Student 1" "text" in the "4:00 AM" "table_row"
     And I set the following fields to these values:
